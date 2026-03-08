@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>أداة تقسيم الصور</title>
+    <title>أداة تقسيم الصور بالتساوي</title>
     <!-- مكتبات لإنشاء ملفات ZIP وتحميلها داخل المتصفح -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
@@ -81,12 +81,12 @@
         </div>
 
         <div class="control-group" id="colControl">
-            <label id="colLabel">عدد الأجزاء (الأعمدة)</label>
+            <label id="colLabel">عدد الأجزاء المتساوية (طولياً)</label>
             <input type="number" id="cols" min="1" max="100" value="2">
         </div>
 
         <div class="control-group" id="rowControl" style="display: none;">
-            <label id="rowLabel">عدد الأجزاء (الصفوف)</label>
+            <label id="rowLabel">عدد الأجزاء المتساوية (عرضياً)</label>
             <input type="number" id="rows" min="1" max="100" value="2">
         </div>
 
@@ -221,12 +221,12 @@
         if (type === 'vertical') {
             colControl.style.display = 'block';
             rowControl.style.display = 'none';
-            document.getElementById('colLabel').innerText = 'عدد الأجزاء (الأعمدة)';
+            document.getElementById('colLabel').innerText = 'عدد الأجزاء المتساوية (طولياً)';
             rowsInput.value = 1;
         } else if (type === 'horizontal') {
             colControl.style.display = 'none';
             rowControl.style.display = 'block';
-            document.getElementById('rowLabel').innerText = 'عدد الأجزاء (الصفوف)';
+            document.getElementById('rowLabel').innerText = 'عدد الأجزاء المتساوية (عرضياً)';
             colsInput.value = 1;
         } else {
             colControl.style.display = 'block';
@@ -263,6 +263,7 @@
         
         const { cols, rows } = validateInputs();
 
+        // التوزيع البصري الدقيق لخطوط الطول
         for (let i = 1; i < cols; i++) {
             const line = document.createElement('div');
             line.className = 'grid-line vertical';
@@ -270,6 +271,7 @@
             gridOverlay.appendChild(line);
         }
 
+        // التوزيع البصري الدقيق لخطوط العرض
         for (let i = 1; i < rows; i++) {
             const line = document.createElement('div');
             line.className = 'grid-line horizontal';
@@ -278,7 +280,7 @@
         }
     }
 
-    // --- معالجة جميع الصور ووضعها معاً في الـ ZIP ---
+    // --- معالجة دقيقة لتقسيم الصور بالتساوي التام ---
     downloadBtn.addEventListener('click', async () => {
         if (currentImages.length === 0) return;
         
@@ -293,7 +295,6 @@
         
         const promises =[];
 
-        // المرور على جميع الصور المرفوعة
         currentImages.forEach((imgData, index) => {
             const img = imgData.img;
             const file = imgData.file;
@@ -301,34 +302,38 @@
             const mimeType = isJpeg ? 'image/jpeg' : 'image/png';
             const ext = isJpeg ? 'jpg' : 'png';
             
-            // اسم الصورة الأساسي بدون الامتداد
             let baseName = file.name ? file.name.replace(/\.[^/.]+$/, "") : "image";
             
-            // لضمان عدم اختلاط أو استبدال أجزاء الصور ببعضها إذا كان لها نفس الاسم
             if (currentImages.length > 1) {
                 baseName = `${baseName}_img${index + 1}`;
             }
 
-            const sliceWidth = Math.floor(img.width / cols);
-            const sliceHeight = Math.floor(img.height / rows);
-
             for (let r = 0; r < rows; r++) {
                 for (let c = 0; c < cols; c++) {
                     promises.push(new Promise((resolve) => {
+                        
+                        // هنا يتم الحساب الدقيق للمسافات للتأكد من التقسيم المتساوي تماماً (رياضياً)
+                        // وبدون فقدان أي بيكسل زائد في حال كانت الصورة لا تقبل القسمة بشكل صحيح
+                        const startX = Math.round((c * img.width) / cols);
+                        const endX = Math.round(((c + 1) * img.width) / cols);
+                        const startY = Math.round((r * img.height) / rows);
+                        const endY = Math.round(((r + 1) * img.height) / rows);
+                        
+                        const sliceWidth = endX - startX;
+                        const sliceHeight = endY - startY;
+
                         canvas.width = sliceWidth;
                         canvas.height = sliceHeight;
                         
-                        ctx.clearRect(0, 0, canvas.width, canvas.height);
+                        ctx.clearRect(0, 0, sliceWidth, sliceHeight);
                         
-                        // رسم الجزء
                         ctx.drawImage(
                             img,
-                            c * sliceWidth, r * sliceHeight, sliceWidth, sliceHeight,
+                            startX, startY, sliceWidth, sliceHeight,
                             0, 0, sliceWidth, sliceHeight
                         );
                         
                         canvas.toBlob((blob) => {
-                            // يتم وضع جميع الأجزاء مباشرة في ملف الـ ZIP الرئيسي
                             const fileName = `${baseName}_row${r+1}_col${c+1}.${ext}`;
                             zip.file(fileName, blob);
                             resolve();
@@ -338,10 +343,8 @@
             }
         });
 
-        // انتظار انتهاء المعالجة
         await Promise.all(promises);
 
-        // إنشاء ملف الـ ZIP وتحميله
         zip.generateAsync({ type: 'blob' }).then((content) => {
             saveAs(content, 'all_split_images.zip');
             downloadBtn.textContent = "تجهيز وتحميل ملف (ZIP)";
