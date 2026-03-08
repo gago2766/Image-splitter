@@ -1,56 +1,58 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Split Image Clone</title>
-    <!-- We use JSZip and FileSaver for local browser zipping and downloading -->
+    <title>أداة تقسيم الصور</title>
+    <!-- مكتبات لإنشاء ملفات ZIP وتحميلها داخل المتصفح -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
     <style>
         * { box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
         body { margin: 0; display: flex; height: 100vh; background-color: #f3f4f6; color: #374151; overflow: hidden;}
         
-        /* Sidebar layout */
-        .sidebar { width: 340px; min-width: 340px; background: white; padding: 24px; border-right: 1px solid #e5e7eb; overflow-y: auto; box-shadow: 2px 0 5px rgba(0,0,0,0.02); z-index: 10;}
+        /* تصميم الشريط الجانبي */
+        .sidebar { width: 340px; min-width: 340px; background: white; padding: 24px; border-left: 1px solid #e5e7eb; overflow-y: auto; box-shadow: -2px 0 5px rgba(0,0,0,0.02); z-index: 10;}
         h2 { margin-top: 0; font-size: 1.3rem; font-weight: 600; color: #111827; margin-bottom: 24px; display: flex; align-items: center; gap: 10px;}
         
-        /* Main layout */
+        /* المساحة الرئيسية */
         .main { flex-grow: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; position: relative; overflow-y: auto; background: #e5e7eb; background-image: radial-gradient(#d1d5db 1px, transparent 0); background-size: 20px 20px;}
         
-        /* Drop Zone */
+        /* منطقة الإفلات */
         .drop-zone { border: 2px dashed #9ca3af; border-radius: 12px; padding: 60px 20px; text-align: center; background: #f9fafb; cursor: pointer; transition: all 0.2s ease; width: 90%; max-width: 600px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);}
         .drop-zone:hover { border-color: #3b82f6; background: #eff6ff; }
         .drop-zone p { color: #6b7280; margin-bottom: 20px; font-size: 1.1rem; }
         .drop-zone .sub-text { font-size: 0.9rem; color: #9ca3af; margin-top: 15px;}
         
-        /* Buttons */
+        /* الأزرار */
         .btn { background: #3b82f6; color: white; border: none; padding: 12px 20px; border-radius: 8px; font-weight: 500; cursor: pointer; transition: 0.2s; font-size: 0.95rem; width: 100%; display: inline-flex; justify-content: center; align-items: center;}
         .btn:hover { background: #2563eb; }
         .btn:disabled { background: #9ca3af; cursor: not-allowed; }
         .btn-secondary { background: white; color: #4b5563; border: 1px solid #d1d5db; margin-top: 12px;}
         .btn-secondary:hover { background: #f3f4f6; }
         
-        /* Controls */
+        /* الإعدادات */
         .control-group { margin-bottom: 24px; }
         .control-group label { display: block; margin-bottom: 8px; font-size: 0.9rem; font-weight: 600; color: #374151; }
         .control-group select, .control-group input[type="number"] { width: 100%; padding: 10px 12px; border: 1px solid #d1d5db; border-radius: 8px; font-size: 0.95rem; background: white; outline: none; transition: 0.2s; box-shadow: 0 1px 2px rgba(0,0,0,0.05);}
         .control-group select:focus, .control-group input:focus { border-color: #3b82f6; box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15); }
         
-        /* Preview Layout */
-        #previewWrapper { display: none; width: 100%; height: 100%; align-items: center; justify-content: center; padding: 40px; overflow: auto; }
+        /* المعاينة */
+        #previewWrapper { display: none; flex-direction: column; width: 100%; height: 100%; align-items: center; justify-content: center; padding: 40px; overflow: auto; }
         #previewContainer { position: relative; display: inline-block; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1), 0 10px 10px -5px rgba(0,0,0,0.04); background: transparent; line-height: 0;}
-        #previewImage { max-width: 100%; max-height: calc(100vh - 80px); display: block; border-radius: 4px;}
+        #previewImage { max-width: 100%; max-height: calc(100vh - 120px); display: block; border-radius: 4px;}
         
-        /* Grid Lines */
+        #imageCounterInfo { margin-top: 20px; font-weight: bold; color: #2563eb; background: #eff6ff; padding: 8px 16px; border-radius: 20px; border: 1px solid #bfdbfe; }
+
+        /* الشبكة */
         #gridOverlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; border-radius: 4px; overflow: hidden;}
-        .grid-line { position: absolute; background: #3b82f6; z-index: 10; pointer-events: none; box-shadow: 0 0 4px rgba(255,255,255,0.8);}
-        .grid-line.vertical { width: 2px; height: 100%; top: 0; transform: translateX(-50%); }
+        .grid-line { position: absolute; background: #ef4444; z-index: 10; pointer-events: none; box-shadow: 0 0 4px rgba(255,255,255,0.8);}
+        .grid-line.vertical { width: 2px; height: 100%; top: 0; transform: translateX(50%); }
         .grid-line.horizontal { height: 2px; width: 100%; left: 0; transform: translateY(-50%); }
 
         @media (max-width: 768px) {
             body { flex-direction: column; overflow: auto;}
-            .sidebar { width: 100%; min-width: 100%; border-right: none; border-bottom: 1px solid #e5e7eb; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
+            .sidebar { width: 100%; min-width: 100%; border-left: none; border-bottom: 1px solid #e5e7eb; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
             .main { padding: 20px; height: 100vh; }
             #previewWrapper { padding: 10px; }
         }
@@ -65,31 +67,31 @@
             <line x1="3" y1="12" x2="21" y2="12"></line>
             <line x1="12" y1="3" x2="12" y2="21"></line>
         </svg>
-        Split Image Clone
+        تقسيم الصور (جودة 100%)
     </h2>
     
     <div id="controlsPanel" style="display: none;">
         <div class="control-group">
-            <label>How to Split</label>
+            <label>طريقة التقسيم</label>
             <select id="splitType">
-                <option value="vertical">Vertically</option>
-                <option value="horizontal">Horizontally</option>
-                <option value="grid">Both (Grid)</option>
+                <option value="vertical">طولياً (أعمدة)</option>
+                <option value="horizontal">عرضياً (صفوف)</option>
+                <option value="grid">شبكة (أعمدة وصفوف)</option>
             </select>
         </div>
 
         <div class="control-group" id="colControl">
-            <label id="colLabel">Quantity of Blocks</label>
+            <label id="colLabel">عدد الأجزاء (الأعمدة)</label>
             <input type="number" id="cols" min="1" max="100" value="2">
         </div>
 
         <div class="control-group" id="rowControl" style="display: none;">
-            <label id="rowLabel">Quantity of Blocks</label>
+            <label id="rowLabel">عدد الأجزاء (الصفوف)</label>
             <input type="number" id="rows" min="1" max="100" value="2">
         </div>
 
-        <button id="downloadBtn" class="btn">Process and Download</button>
-        <button id="resetBtn" class="btn btn-secondary">Upload New Image</button>
+        <button id="downloadBtn" class="btn">تجهيز وتحميل ملف (ZIP)</button>
+        <button id="resetBtn" class="btn btn-secondary" onclick="resetApp()">رفع صور جديدة</button>
     </div>
 </div>
 
@@ -100,10 +102,10 @@
             <polyline points="17 8 12 3 7 8"></polyline>
             <line x1="12" y1="3" x2="12" y2="15"></line>
         </svg>
-        <p>Drop image into this area<br>or</p>
-        <button class="btn" style="max-width: 200px;" onclick="document.getElementById('fileInput').click()">Select File</button>
-        <input type="file" id="fileInput" accept="image/*" style="display: none;">
-        <div class="sub-text">Or paste image with Ctrl+V</div>
+        <p>اسحب وأفلت الصور هنا<br>(يدعم حتى 100 صورة)</p>
+        <button class="btn" style="max-width: 200px;" onclick="document.getElementById('fileInput').click()">اختر الصور</button>
+        <input type="file" id="fileInput" accept="image/*" multiple style="display: none;">
+        <div class="sub-text">أو قم بلصق الصور باستخدام Ctrl+V</div>
     </div>
 
     <div id="previewWrapper">
@@ -111,6 +113,7 @@
             <img id="previewImage" src="" alt="Preview">
             <div id="gridOverlay"></div>
         </div>
+        <div id="imageCounterInfo">يتم عرض الصورة الأولى كمعاينة فقط (القص سيطبق على جميع الصور)</div>
     </div>
 </div>
 
@@ -123,12 +126,11 @@
     const colControl = document.getElementById('colControl');
     const rowControl = document.getElementById('rowControl');
     const downloadBtn = document.getElementById('downloadBtn');
+    const imageCounterInfo = document.getElementById('imageCounterInfo');
     
-    let currentImage = null;
-    let imgWidth = 0;
-    let imgHeight = 0;
+    let currentImages =[]; 
 
-    // --- File Handling (Drag/Drop, Select, Paste) ---
+    // --- التعامل مع الملفات ---
     dropZone.addEventListener('dragover', (e) => {
         e.preventDefault();
         dropZone.style.borderColor = '#3b82f6';
@@ -144,65 +146,93 @@
     dropZone.addEventListener('drop', (e) => {
         e.preventDefault();
         if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
-            handleFile(e.dataTransfer.files[0]);
+            handleFiles(e.dataTransfer.files);
         }
     });
 
     fileInput.addEventListener('change', (e) => {
         if (e.target.files && e.target.files.length > 0) {
-            handleFile(e.target.files[0]);
+            handleFiles(e.target.files);
         }
     });
 
     document.addEventListener('paste', (e) => {
         if (e.clipboardData && e.clipboardData.files && e.clipboardData.files.length > 0) {
-            handleFile(e.clipboardData.files[0]);
+            handleFiles(e.clipboardData.files);
         }
     });
 
-    function handleFile(file) {
-        if (!file.type.startsWith('image/')) {
-            alert("Please upload a valid image file.");
+    async function handleFiles(fileList) {
+        const files = Array.from(fileList).filter(f => f.type.startsWith('image/')).slice(0, 100);
+        
+        if (files.length === 0) {
+            alert("يرجى رفع صور صالحة.");
             return;
         }
-        const reader = new FileReader();
-        reader.onload = (event) => {
-            const img = new Image();
-            img.onload = () => {
-                currentImage = img;
-                imgWidth = img.width;
-                imgHeight = img.height;
-                
-                document.getElementById('previewImage').src = img.src;
-                document.getElementById('dropZone').style.display = 'none';
-                document.getElementById('previewWrapper').style.display = 'flex';
-                document.getElementById('controlsPanel').style.display = 'block';
-                
-                updateControls();
-            };
-            img.src = event.target.result;
+
+        currentImages =[];
+        const loadImage = (file) => {
+            return new Promise((resolve) => {
+                const reader = new FileReader();
+                reader.onload = (event) => {
+                    const img = new Image();
+                    img.onload = () => resolve({ file: file, img: img });
+                    img.src = event.target.result;
+                };
+                reader.readAsDataURL(file);
+            });
         };
-        reader.readAsDataURL(file);
+
+        for (let file of files) {
+            const imageData = await loadImage(file);
+            currentImages.push(imageData);
+        }
+
+        if (currentImages.length > 0) {
+            document.getElementById('previewImage').src = currentImages[0].img.src;
+            document.getElementById('dropZone').style.display = 'none';
+            document.getElementById('previewWrapper').style.display = 'flex';
+            document.getElementById('controlsPanel').style.display = 'block';
+            
+            if(currentImages.length > 1) {
+                imageCounterInfo.style.display = 'block';
+                imageCounterInfo.innerText = `تم رفع ${currentImages.length} صور. يتم عرض الأولى فقط، والقص سيطبق على الجميع في ملف ZIP واحد.`;
+            } else {
+                imageCounterInfo.style.display = 'none';
+            }
+
+            updateControls();
+        }
     }
 
-    // --- User Interface & Grid Drawing ---
+    function resetApp() {
+        currentImages =[];
+        fileInput.value = "";
+        document.getElementById('dropZone').style.display = 'block';
+        document.getElementById('previewWrapper').style.display = 'none';
+        document.getElementById('controlsPanel').style.display = 'none';
+        dropZone.style.borderColor = '#9ca3af';
+        dropZone.style.background = '#f9fafb';
+    }
+
+    // --- تحديث واجهة الإعدادات ---
     function updateControls() {
         const type = splitType.value;
         if (type === 'vertical') {
             colControl.style.display = 'block';
             rowControl.style.display = 'none';
-            document.getElementById('colLabel').innerText = 'Quantity of Blocks';
+            document.getElementById('colLabel').innerText = 'عدد الأجزاء (الأعمدة)';
             rowsInput.value = 1;
         } else if (type === 'horizontal') {
             colControl.style.display = 'none';
             rowControl.style.display = 'block';
-            document.getElementById('rowLabel').innerText = 'Quantity of Blocks';
+            document.getElementById('rowLabel').innerText = 'عدد الأجزاء (الصفوف)';
             colsInput.value = 1;
         } else {
             colControl.style.display = 'block';
             rowControl.style.display = 'block';
-            document.getElementById('colLabel').innerText = 'Quantity of Columns';
-            document.getElementById('rowLabel').innerText = 'Quantity of Rows';
+            document.getElementById('colLabel').innerText = 'الأعمدة';
+            document.getElementById('rowLabel').innerText = 'الصفوف';
             if (parseInt(colsInput.value) < 2) colsInput.value = 2;
             if (parseInt(rowsInput.value) < 2) rowsInput.value = 2;
         }
@@ -220,7 +250,6 @@
         if (isNaN(cols) || cols < 1) cols = 1;
         if (isNaN(rows) || rows < 1) rows = 1;
         
-        // Capped to prevent browser crash
         if (cols > 100) cols = 100;
         if (rows > 100) rows = 100;
         
@@ -228,13 +257,12 @@
     }
 
     function updateGrid() {
-        if (!currentImage) return;
+        if (currentImages.length === 0) return;
         const gridOverlay = document.getElementById('gridOverlay');
         gridOverlay.innerHTML = '';
         
         const { cols, rows } = validateInputs();
 
-        // Draw Vertical Gridlines
         for (let i = 1; i < cols; i++) {
             const line = document.createElement('div');
             line.className = 'grid-line vertical';
@@ -242,7 +270,6 @@
             gridOverlay.appendChild(line);
         }
 
-        // Draw Horizontal Gridlines
         for (let i = 1; i < rows; i++) {
             const line = document.createElement('div');
             line.className = 'grid-line horizontal';
@@ -251,16 +278,77 @@
         }
     }
 
-    // --- Image Processing & ZIP Generation ---
+    // --- معالجة جميع الصور ووضعها معاً في الـ ZIP ---
     downloadBtn.addEventListener('click', async () => {
-        if (!currentImage) return;
+        if (currentImages.length === 0) return;
         
         const zip = new JSZip();
         const { cols, rows } = validateInputs();
 
-        downloadBtn.textContent = "Processing...";
+        downloadBtn.textContent = "جاري المعالجة...";
         downloadBtn.disabled = true;
 
         const canvas = document.createElement('canvas');
-        const ctx = canvas.getContext('2d');
-        const promises =
+        const ctx = canvas.getContext('2d', { willReadFrequently: true });
+        
+        const promises =[];
+
+        // المرور على جميع الصور المرفوعة
+        currentImages.forEach((imgData, index) => {
+            const img = imgData.img;
+            const file = imgData.file;
+            const isJpeg = file.type === 'image/jpeg';
+            const mimeType = isJpeg ? 'image/jpeg' : 'image/png';
+            const ext = isJpeg ? 'jpg' : 'png';
+            
+            // اسم الصورة الأساسي بدون الامتداد
+            let baseName = file.name ? file.name.replace(/\.[^/.]+$/, "") : "image";
+            
+            // لضمان عدم اختلاط أو استبدال أجزاء الصور ببعضها إذا كان لها نفس الاسم
+            if (currentImages.length > 1) {
+                baseName = `${baseName}_img${index + 1}`;
+            }
+
+            const sliceWidth = Math.floor(img.width / cols);
+            const sliceHeight = Math.floor(img.height / rows);
+
+            for (let r = 0; r < rows; r++) {
+                for (let c = 0; c < cols; c++) {
+                    promises.push(new Promise((resolve) => {
+                        canvas.width = sliceWidth;
+                        canvas.height = sliceHeight;
+                        
+                        ctx.clearRect(0, 0, canvas.width, canvas.height);
+                        
+                        // رسم الجزء
+                        ctx.drawImage(
+                            img,
+                            c * sliceWidth, r * sliceHeight, sliceWidth, sliceHeight,
+                            0, 0, sliceWidth, sliceHeight
+                        );
+                        
+                        canvas.toBlob((blob) => {
+                            // يتم وضع جميع الأجزاء مباشرة في ملف الـ ZIP الرئيسي
+                            const fileName = `${baseName}_row${r+1}_col${c+1}.${ext}`;
+                            zip.file(fileName, blob);
+                            resolve();
+                        }, mimeType, 1.0); 
+                    }));
+                }
+            }
+        });
+
+        // انتظار انتهاء المعالجة
+        await Promise.all(promises);
+
+        // إنشاء ملف الـ ZIP وتحميله
+        zip.generateAsync({ type: 'blob' }).then((content) => {
+            saveAs(content, 'all_split_images.zip');
+            downloadBtn.textContent = "تجهيز وتحميل ملف (ZIP)";
+            downloadBtn.disabled = false;
+        });
+    });
+</script>
+
+</body>
+</html>
