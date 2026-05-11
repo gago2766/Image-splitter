@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>أداة تقسيم الصور (Fighter Edition - فائق السرعة)</title>
+    <title>أداة تقسيم الصور (إصدار المجلدات والـ ZIP)</title>
     <!-- خطوط جوجل -->
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet">
     <!-- مكتبات JS -->
@@ -35,8 +35,8 @@
         .upload-section { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 60vh; background: var(--surface); border: 3px dashed #cbd5e1; border-radius: var(--radius-lg); cursor: pointer; box-shadow: var(--shadow); }
         .upload-section:hover, .upload-section.dragover { border-color: var(--primary); background: rgba(79, 70, 229, 0.05); }
         .upload-icon { width: 80px; height: 80px; color: var(--primary); margin-bottom: 1rem; }
-        .upload-text { font-size: 1.5rem; font-weight: 700; color: var(--text-main); }
-        .upload-sub { color: var(--text-muted); margin-top: 0.5rem; font-size: 1rem; }
+        .upload-text { font-size: 1.5rem; font-weight: 700; color: var(--text-main); text-align: center;}
+        .upload-sub { color: var(--text-muted); margin-top: 0.5rem; font-size: 1rem; text-align: center; }
 
         .workspace { display: none; gap: 2rem; height: calc(100vh - 150px); }
         .control-panel { width: 380px; background: var(--surface); border-radius: var(--radius-lg); padding: 2rem; box-shadow: var(--shadow); display: flex; flex-direction: column; gap: 1.5rem; overflow-y: auto; }
@@ -51,7 +51,7 @@
         .color-picker::-webkit-color-swatch { border: 1px solid var(--border-color); border-radius: 8px; }
 
         .btn { width: 100%; padding: 14px; border: none; border-radius: var(--radius-md); font-size: 1.1rem; font-weight: 700; cursor: pointer; display: flex; justify-content: center; align-items: center; gap: 8px; }
-        .btn-primary { background: linear-gradient(90deg, var(--primary), #6366f1); color: white; box-shadow: 0 4px 6px -1px rgba(79, 70, 229, 0.3); position: relative; overflow: hidden; }
+        .btn-primary { background: linear-gradient(90deg, var(--primary), #6366f1); color: white; box-shadow: 0 4px 6px -1px rgba(79, 70, 229, 0.3); }
         .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 6px 12px -2px rgba(79, 70, 229, 0.4); }
         .btn-primary:disabled { background: #94a3b8; cursor: not-allowed; transform: none; box-shadow: none; }
         .btn-outline { background: transparent; color: var(--text-main); border: 2px solid var(--border-color); }
@@ -72,42 +72,39 @@
         #gridOverlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: flex; flex-wrap: wrap; }
         .grid-cell { box-sizing: border-box; outline: 1px solid rgba(236, 72, 153, 0.8); cursor: pointer; display: flex; align-items: center; justify-content: center; position: absolute; background: transparent; transition: background 0.2s; }
         .grid-cell:hover { background: rgba(236, 72, 153, 0.3); outline: 2px solid var(--secondary); z-index: 10; }
-        .grid-cell:hover::after { content: 'تحميل هذا الجزء ↓'; color: white; background: rgba(0,0,0,0.7); padding: 4px 8px; border-radius: 4px; font-size: 0.8rem; font-weight: bold; pointer-events: none;}
-
+        
         .progress-wrapper { display: none; margin-top: 15px; }
         .progress-bar { width: 100%; height: 10px; background: var(--border-color); border-radius: 10px; overflow: hidden; position: relative;}
         .progress-fill { width: 0%; height: 100%; background: linear-gradient(90deg, #10b981, #34d399); transition: width 0.2s; }
         .progress-text { font-size: 0.85rem; color: var(--text-muted); text-align: center; margin-top: 5px; font-weight: 600;}
+        #folderInfo { margin-top: 10px; font-size: 0.85rem; color: var(--primary); font-weight: 700; background: rgba(79, 70, 229, 0.1); padding: 5px 10px; border-radius: 8px; display: inline-block;}
 
         #toast { visibility: hidden; min-width: 250px; background-color: var(--primary); color: #fff; text-align: center; border-radius: 8px; padding: 16px; position: fixed; z-index: 100; left: 50%; bottom: 30px; transform: translateX(-50%); font-size: 1rem; box-shadow: var(--shadow); opacity: 0; transition: opacity 0.5s, bottom 0.5s; }
         #toast.show { visibility: visible; opacity: 1; bottom: 50px; }
-
-        @media (max-width: 900px) { .workspace { flex-direction: column; height: auto; } .control-panel { width: 100%; } #previewImage { max-height: 50vh; } }
     </style>
 </head>
 <body>
 
     <header>
         <h1>
-            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
-            أداة القص فائقة السرعة
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path></svg>
+            أداة القص مع دعم المجلدات (ZIP)
         </h1>
         <button class="theme-toggle" onclick="toggleTheme()">
-            <svg id="themeIcon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
             <span id="themeText">ليلي</span>
         </button>
     </header>
 
     <div class="container">
         <div id="uploadSection" class="upload-section">
-            <svg class="upload-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
-            <div class="upload-text">اسحب وأفلت الصور هنا</div>
-            <div class="upload-sub">أو انقر لاختيار الملفات (حتى 100 صورة) • يدعم اللصق Ctrl+V</div>
-            <input type="file" id="fileInput" accept="image/*" multiple style="display: none;">
+            <svg class="upload-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
+            <div class="upload-text">اسحب وأفلت الصور أو ملف ZIP يحتوي على مجلدات</div>
+            <div class="upload-sub">سيتم استخراج المجلدات والصور من ملف الـ ZIP وتطبيق القص عليها مع الحفاظ على ترتيب المجلدات.</div>
+            <!-- تم تعديل الـ Accept ليقبل الصور وملفات ZIP -->
+            <input type="file" id="fileInput" accept="image/*,.zip" multiple style="display: none;">
         </div>
 
         <div id="workspace" class="workspace">
-            
             <div class="control-panel">
                 <div class="control-group">
                     <label>طريقة التقسيم</label>
@@ -130,14 +127,12 @@
                 </div>
 
                 <div class="control-group">
-                    <label class="highlight-label">
-                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
-                        حجم وجودة التصدير
-                    </label>
+                    <label class="highlight-label">حجم وجودة التصدير</label>
                     <select id="exportQuality" class="input-field">
-                        <option value="smart">ضغط ذكي (نفس الصيغة - جودة عالية وحجم صغير)</option>
-                        <option value="webp">صيغة WebP (أصغر حجم ممكن)</option>
-                        <option value="raw">جودة خام 100% (حجم كبير جداً)</option>
+                        <option value="ultra">تحسين فائق للسوشيال ميديا (حجم خفيف جداً - جودة ممتازة)</option>
+                        <option value="smart">ضغط ذكي (نفس أبعاد الصورة الأصلية - جودة عالية وحجم متوسط)</option>
+                        <option value="webp">صيغة WebP (أصغر حجم ممكن للأبعاد الأصلية)</option>
+                        <option value="raw">جودة خام 100% (حجم ضخم جداً)</option>
                     </select>
                 </div>
 
@@ -145,13 +140,12 @@
                     <label>لون خلفية الصور الشفافة (PNG)</label>
                     <div class="color-picker-wrapper">
                         <input type="color" id="bgColor" class="color-picker" value="#ffffff">
-                        <span style="font-size: 0.9rem; color: var(--text-muted);">املأ الفراغ باللون</span>
                     </div>
                 </div>
 
                 <div class="control-group">
                     <label>اسم ملف التنزيل (بدون .zip)</label>
-                    <input type="text" id="zipName" class="input-field" value="Split_Images">
+                    <input type="text" id="zipName" class="input-field" value="Split_Images_Folders">
                 </div>
 
                 <div style="flex-grow: 1;"></div> 
@@ -162,28 +156,28 @@
                 </div>
 
                 <button id="downloadBtn" class="btn btn-primary">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg>
-                    معالجة وتنزيل سريع (ZIP)
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
+                    تطبيق وتقسيم الملفات (ZIP)
                 </button>
-                <button id="resetBtn" class="btn btn-outline" onclick="resetApp()">العودة لرفع صور جديدة</button>
+                <button id="resetBtn" class="btn btn-outline" onclick="resetApp()">تفريغ والبدء من جديد</button>
             </div>
 
             <div class="preview-area">
                 <div class="preview-header">
-                    <div class="image-nav" id="imageNav" style="display: none;">
-                        <button class="nav-btn" onclick="changeImage(-1)">❮</button>
-                        <span id="imgCounterText">صورة 1 من 1</span>
-                        <button class="nav-btn" onclick="changeImage(1)">❯</button>
+                    <div style="display:flex; flex-direction:column;">
+                        <div class="image-nav" id="imageNav" style="display: none;">
+                            <button class="nav-btn" onclick="changeImage(-1)">❮</button>
+                            <span id="imgCounterText">صورة 1 من 1</span>
+                            <button class="nav-btn" onclick="changeImage(1)">❯</button>
+                        </div>
+                        <div id="folderInfo" style="display:none;"></div>
                     </div>
-                    <button class="delete-btn" onclick="deleteCurrentImage()" id="deleteBtn">
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
-                        إزالة الصورة
-                    </button>
+                    <button class="delete-btn" onclick="deleteCurrentImage()" id="deleteBtn">إزالة الصورة</button>
                 </div>
                 <div class="preview-container">
                     <div class="canvas-wrapper" id="canvasWrapper">
                         <img id="previewImage" src="" alt="Preview">
-                        <div id="gridOverlay" title="اضغط على أي جزء لتحميله مباشرة"></div>
+                        <div id="gridOverlay"></div>
                     </div>
                 </div>
             </div>
@@ -192,65 +186,100 @@
 
     <div id="toast"></div>
 
-    <!-- 스크립트 코어 -->
     <script>
-        // --- الوضع الليلي ---
-        function toggleTheme() {
-            document.body.classList.toggle('dark');
-            const isDark = document.body.classList.contains('dark');
-            localStorage.setItem('theme', isDark ? 'dark' : 'light');
-            document.getElementById('themeText').innerText = isDark ? 'نهاري' : 'ليلي';
-            document.getElementById('themeIcon').innerHTML = isDark 
-                ? '<circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>'
-                : '<path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>';
-        }
+        // --- إعدادات الواجهة ---
+        function toggleTheme() { document.body.classList.toggle('dark'); localStorage.setItem('theme', document.body.classList.contains('dark') ? 'dark' : 'light'); }
         if(localStorage.getItem('theme') === 'dark') toggleTheme();
+        function showToast(msg) { const t = document.getElementById("toast"); t.innerText = msg; t.className = "show"; setTimeout(() => t.className = t.className.replace("show", ""), 3000); }
 
-        // --- المتغيرات وعناصر الواجهة ---
         const uploadSection = document.getElementById('uploadSection'), fileInput = document.getElementById('fileInput'), workspace = document.getElementById('workspace');
         const splitType = document.getElementById('splitType'), colsInput = document.getElementById('cols'), rowsInput = document.getElementById('rows');
         const exportQuality = document.getElementById('exportQuality'), bgColorInput = document.getElementById('bgColor'), zipNameInput = document.getElementById('zipName');
         const previewImage = document.getElementById('previewImage'), gridOverlay = document.getElementById('gridOverlay');
-        const imageNav = document.getElementById('imageNav'), imgCounterText = document.getElementById('imgCounterText');
+        const imageNav = document.getElementById('imageNav'), imgCounterText = document.getElementById('imgCounterText'), folderInfo = document.getElementById('folderInfo');
         
+        // مصفوفة لتخزين بيانات الصور (شاملة مسار المجلد)
         let currentImages =[], currentViewIndex = 0;
 
-        function showToast(message) {
-            const toast = document.getElementById("toast");
-            toast.innerText = message; toast.className = "show";
-            setTimeout(() => { toast.className = toast.className.replace("show", ""); }, 3000);
-        }
-
-        // --- رفع الملفات ---
+        // --- التعامل مع الرفع (صور عادية أو ZIP) ---
         uploadSection.addEventListener('click', () => fileInput.click());
         uploadSection.addEventListener('dragover', (e) => { e.preventDefault(); uploadSection.classList.add('dragover'); });
         uploadSection.addEventListener('dragleave', (e) => { e.preventDefault(); uploadSection.classList.remove('dragover'); });
         uploadSection.addEventListener('drop', (e) => { e.preventDefault(); uploadSection.classList.remove('dragover'); if (e.dataTransfer.files) handleFiles(e.dataTransfer.files); });
         fileInput.addEventListener('change', (e) => handleFiles(e.target.files));
-        document.addEventListener('paste', (e) => { if (e.clipboardData && e.clipboardData.files) handleFiles(e.clipboardData.files); });
 
         async function handleFiles(fileList) {
-            const files = Array.from(fileList).filter(f => f.type.startsWith('image/')).slice(0, 100);
+            const files = Array.from(fileList);
             if (files.length === 0) return;
 
-            const loadImage = (file) => new Promise((resolve) => {
-                const reader = new FileReader();
-                reader.onload = (event) => {
-                    const img = new Image(); img.onload = () => resolve({ file: file, img: img });
-                    img.src = event.target.result;
-                }; reader.readAsDataURL(file);
-            });
+            showToast("جاري القراءة والمعالجة الأولية...");
+            currentImages =[]; currentViewIndex = 0;
 
-            showToast("جاري تحميل الصور...");
-            for (let file of files) currentImages.push(await loadImage(file));
+            for (let file of files) {
+                // إذا كان الملف المرفوع ZIP
+                if (file.name.toLowerCase().endsWith('.zip')) {
+                    try {
+                        showToast(`جاري استخراج المجلدات من: ${file.name}...`);
+                        const zip = await JSZip.loadAsync(file);
+                        
+                        // قراءة جميع الملفات داخل الـ ZIP
+                        for (const [relativePath, zipEntry] of Object.entries(zip.files)) {
+                            // تجاهل المجلدات الفارغة والملفات التي ليست صور
+                            if (!zipEntry.dir && relativePath.match(/\.(jpe?g|png|webp)$/i)) {
+                                
+                                const blob = await zipEntry.async("blob");
+                                // استخراج اسم المجلد واسم الملف
+                                const pathParts = relativePath.split('/');
+                                const fileName = pathParts.pop(); // اسم الصورة
+                                const folderPath = pathParts.length > 0 ? pathParts.join('/') + '/' : ''; // مسار المجلد
+                                
+                                // إنشاء كائن وهمي للملف ليحاكي رفع الملفات العادي
+                                const mockFile = new File([blob], fileName, { type: blob.type || 'image/jpeg' });
+                                
+                                // تحويل الـ Blob إلى صورة لعرضها وتقطيعها
+                                const img = await blobToImage(blob);
+                                currentImages.push({ file: mockFile, img: img, folderPath: folderPath });
+                            }
+                        }
+                    } catch (err) {
+                        showToast("حدث خطأ أثناء فك ضغط الـ ZIP");
+                        console.error(err);
+                    }
+                } 
+                // إذا كانت صور عادية مرفوعة بشكل مباشر
+                else if (file.type.startsWith('image/')) {
+                    const img = await fileToImage(file);
+                    currentImages.push({ file: file, img: img, folderPath: '' }); // لا يوجد مجلد
+                }
+            }
 
             if (currentImages.length > 0) {
                 uploadSection.style.display = 'none'; workspace.style.display = 'flex';
                 updatePreview(); updateControls();
-                showToast(`تم استيراد ${currentImages.length} صورة`);
+                showToast(`تم تحميل ${currentImages.length} صورة جاهزة للتقطيع`);
+            } else {
+                showToast("لم يتم العثور على صور صالحة.");
             }
         }
 
+        // دوال مساعدة لتحميل الصور
+        const blobToImage = (blob) => new Promise((resolve) => {
+            const img = new Image();
+            img.onload = () => resolve(img);
+            img.src = URL.createObjectURL(blob);
+        });
+
+        const fileToImage = (file) => new Promise((resolve) => {
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                const img = new Image();
+                img.onload = () => resolve(img);
+                img.src = e.target.result;
+            };
+            reader.readAsDataURL(file);
+        });
+
+        // --- واجهة العرض والتقليب ---
         function changeImage(direction) {
             currentViewIndex += direction;
             if (currentViewIndex >= currentImages.length) currentViewIndex = 0;
@@ -258,19 +287,33 @@
             updatePreview();
         }
 
+        function updatePreview() {
+            if (currentImages.length === 0) return;
+            const currentObj = currentImages[currentViewIndex];
+            previewImage.src = currentObj.img.src;
+            
+            if (currentImages.length > 1) { 
+                imageNav.style.display = 'flex'; 
+                imgCounterText.innerText = `صورة ${currentViewIndex + 1} من ${currentImages.length}`; 
+            } else { imageNav.style.display = 'none'; }
+            
+            // عرض اسم المجلد إذا كانت الصورة مستخرجة من ZIP
+            if (currentObj.folderPath) {
+                folderInfo.style.display = 'inline-block';
+                folderInfo.innerText = `📁 المسار: ${currentObj.folderPath}`;
+            } else {
+                folderInfo.style.display = 'none';
+            }
+
+            setTimeout(updateGrid, 50);
+        }
+
         function deleteCurrentImage() {
             if(currentImages.length === 0) return;
             currentImages.splice(currentViewIndex, 1);
-            if(currentImages.length === 0) { resetApp(); showToast("تم حذف جميع الصور"); return; }
+            if(currentImages.length === 0) { resetApp(); return; }
             if(currentViewIndex >= currentImages.length) currentViewIndex = currentImages.length - 1;
-            updatePreview(); showToast("تم إزالة الصورة");
-        }
-
-        function updatePreview() {
-            if (currentImages.length === 0) return;
-            previewImage.src = currentImages[currentViewIndex].img.src;
-            if (currentImages.length > 1) { imageNav.style.display = 'flex'; imgCounterText.innerText = `صورة ${currentViewIndex + 1} من ${currentImages.length}`; } else { imageNav.style.display = 'none'; }
-            setTimeout(updateGrid, 50);
+            updatePreview();
         }
 
         function resetApp() {
@@ -295,7 +338,6 @@
             return { cols: Math.min(Math.max(cols, 1), 100), rows: Math.min(Math.max(rows, 1), 100) };
         }
 
-        // --- الشبكة التفاعلية وتحميل جزء واحد مباشر ---
         function updateGrid() {
             if (currentImages.length === 0) return;
             gridOverlay.innerHTML = '';
@@ -306,52 +348,30 @@
                     cell.className = 'grid-cell';
                     cell.style.width = `${100 / cols}%`; cell.style.height = `${100 / rows}%`;
                     cell.style.left = `${(c / cols) * 100}%`; cell.style.top = `${(r / rows) * 100}%`;
-                    cell.onclick = () => downloadSingleSlice(r, c);
                     gridOverlay.appendChild(cell);
                 }
             }
         }
 
-        async function downloadSingleSlice(r, c) {
-            const { cols, rows } = validateInputs(); const { img, file } = currentImages[currentViewIndex];
-            const canvas = document.createElement('canvas'); const ctx = canvas.getContext('2d');
-            const startX = Math.round((c * img.width) / cols), endX = Math.round(((c + 1) * img.width) / cols);
-            const startY = Math.round((r * img.height) / rows), endY = Math.round(((r + 1) * img.height) / rows);
-            const sliceWidth = endX - startX, sliceHeight = endY - startY;
-
-            canvas.width = sliceWidth; canvas.height = sliceHeight;
-            ctx.fillStyle = bgColorInput.value; ctx.fillRect(0, 0, sliceWidth, sliceHeight);
-            ctx.drawImage(img, startX, startY, sliceWidth, sliceHeight, 0, 0, sliceWidth, sliceHeight);
-            
-            let ext = exportQuality.value === 'webp' ? 'webp' : (file.type === 'image/jpeg' ? 'jpg' : 'png');
-            let mimeType = `image/${ext === 'jpg' ? 'jpeg' : ext}`;
-            let quality = exportQuality.value === 'smart' ? 0.92 : (exportQuality.value === 'webp' ? 0.90 : 1.0);
-            let baseName = file.name ? file.name.replace(/\.[^/.]+$/, "") : "image";
-            
-            canvas.toBlob((blob) => { saveAs(blob, `${baseName}_row${r+1}_col${c+1}.${ext}`); showToast("تم التنزيل"); }, mimeType, quality);
-        }
-
-        // ==========================================
-        //  مُحرك المعالجة الفائق (Web Workers + Promise.all)
-        // ==========================================
-        
-        // 1. كود الخادم (Worker Script) الذي سيعمل في الخلفية
+        // --- محرك الـ Web Worker للتقطيع فائق السرعة ---
         const workerScript = `
             self.onmessage = async function(e) {
-                const { id, imgBitmap, startX, startY, sliceWidth, sliceHeight, mimeType, quality, bgColor } = e.data;
+                const { id, imgBitmap, startX, startY, sliceWidth, sliceHeight, mimeType, quality, bgColor, targetWidth, targetHeight } = e.data;
                 try {
-                    // إنشاء Canvas خارجي للعمل بالخلفية
-                    const canvas = new OffscreenCanvas(sliceWidth, sliceHeight);
+                    // إذا كان هناك تصغير (Smart Resizing)
+                    const finalWidth = targetWidth || sliceWidth;
+                    const finalHeight = targetHeight || sliceHeight;
+
+                    const canvas = new OffscreenCanvas(finalWidth, finalHeight);
                     const ctx = canvas.getContext('2d');
                     
-                    if(bgColor) {
+                    if(bgColor && mimeType !== 'image/png') {
                         ctx.fillStyle = bgColor;
-                        ctx.fillRect(0, 0, sliceWidth, sliceHeight);
+                        ctx.fillRect(0, 0, finalWidth, finalHeight);
                     }
                     
-                    ctx.drawImage(imgBitmap, startX, startY, sliceWidth, sliceHeight, 0, 0, sliceWidth, sliceHeight);
+                    ctx.drawImage(imgBitmap, startX, startY, sliceWidth, sliceHeight, 0, 0, finalWidth, finalHeight);
                     
-                    // تحويل الجزء للصيغة النهائية
                     const blob = await canvas.convertToBlob({ type: mimeType, quality: quality });
                     self.postMessage({ id, blob, success: true });
                 } catch (err) {
@@ -362,73 +382,70 @@
 
         document.getElementById('downloadBtn').addEventListener('click', async () => {
             if (currentImages.length === 0) return;
-            const zip = new JSZip(), { cols, rows } = validateInputs(), fileName = zipNameInput.value.trim() || 'Split_Images';
+            const finalZip = new JSZip(), { cols, rows } = validateInputs(), fileName = zipNameInput.value.trim() || 'Processed_Images';
             const qualitySetting = exportQuality.value, bgColor = bgColorInput.value;
             const btn = document.getElementById('downloadBtn');
 
-            btn.disabled = true; 
-            document.getElementById('progressWrapper').style.display = 'block';
+            btn.disabled = true; document.getElementById('progressWrapper').style.display = 'block';
             
-            const totalTasks = currentImages.length * rows * cols; 
-            let completedTasks = 0;
-            const updateProgress = (percent, text) => { 
-                document.getElementById('progressFill').style.width = `${percent}%`; 
-                document.getElementById('progressText').innerText = text; 
-            };
+            const totalTasks = currentImages.length * rows * cols; let completedTasks = 0;
+            const updateProgress = (percent, text) => { document.getElementById('progressFill').style.width = `${percent}%`; document.getElementById('progressText').innerText = text; };
 
-            updateProgress(0, "جاري تحضير الأنوية المتعددة..."); 
-            await new Promise(resolve => setTimeout(resolve, 50));
+            updateProgress(0, "جاري تحضير الأنوية المتعددة لمعالجة المجلدات..."); 
 
-            // 2. التحقق من دعم المتصفح للخوادم المتعددة وإنشائها
             const supportsWorkers = typeof OffscreenCanvas !== 'undefined' && typeof createImageBitmap !== 'undefined';
-            let workers =[];
-            let currentWorkerIndex = 0;
+            let workers =[], currentWorkerIndex = 0;
 
             if (supportsWorkers) {
-                // استخراج عدد أنوية المعالج الخاص بجهازك، أو استخدام 4 كحد أدنى
                 const numWorkers = navigator.hardwareConcurrency || 4;
                 const blobURL = URL.createObjectURL(new Blob([workerScript], { type: 'application/javascript' }));
-                for (let i = 0; i < numWorkers; i++) {
-                    workers.push(new Worker(blobURL));
-                }
+                for (let i = 0; i < numWorkers; i++) workers.push(new Worker(blobURL));
             }
 
-            // مصفوفة الـ Promises لتنفيذ الأوامر في نفس اللحظة
             const promises =[];
 
-            // تجهيز البديل إذا كان المتصفح قديم جداً لا يدعم الـ Workers
-            const fallbackCanvas = document.createElement('canvas');
-            const fallbackCtx = fallbackCanvas.getContext('2d', { willReadFrequently: true });
-
             for (let imgIndex = 0; imgIndex < currentImages.length; imgIndex++) {
-                const { img, file } = currentImages[imgIndex];
-                let isJpeg = file.type === 'image/jpeg';
-                let mimeType = isJpeg ? 'image/jpeg' : 'image/png', ext = isJpeg ? 'jpg' : 'png', outputQuality = 0.92;
+                const { img, file, folderPath } = currentImages[imgIndex];
+                
+                // تحديد إعدادات الضغط والتحجيم حسب اختيار المستخدم
+                let mimeType = 'image/jpeg', ext = 'jpg', outputQuality = 0.92;
+                let scaleFactor = 1.0;
 
-                if (qualitySetting === 'webp') { mimeType = 'image/webp'; ext = 'webp'; outputQuality = 0.90; } 
-                else if (qualitySetting === 'raw') { outputQuality = 1.0; }
+                if (qualitySetting === 'ultra') {
+                    mimeType = 'image/webp'; ext = 'webp'; outputQuality = 0.85;
+                    // تحجيم ذكي للسوشيال ميديا (بحيث لا يتعدى عرض الصورة الأصلية 1080 بيكسل)
+                    if (img.width > 1080) scaleFactor = 1080 / img.width;
+                } else if (qualitySetting === 'webp') {
+                    mimeType = 'image/webp'; ext = 'webp'; outputQuality = 0.90;
+                } else if (qualitySetting === 'raw') {
+                    mimeType = file.type === 'image/png' ? 'image/png' : 'image/jpeg';
+                    ext = mimeType === 'image/png' ? 'png' : 'jpg'; outputQuality = 1.0;
+                } else {
+                    // Smart
+                    mimeType = file.type === 'image/png' ? 'image/png' : 'image/jpeg';
+                    ext = mimeType === 'image/png' ? 'png' : 'jpg'; outputQuality = 0.92;
+                }
                 
                 let baseName = file.name ? file.name.replace(/\.[^/.]+$/, "") : "image";
-                if (currentImages.length > 1) baseName = `${baseName}_img${imgIndex + 1}`;
-
-                // تحويل الصورة لـ Bitmap لنقلها بسرعة بين الأنوية
+                
                 let imgBitmap = null;
-                if (supportsWorkers) {
-                    imgBitmap = await createImageBitmap(file);
-                }
+                if (supportsWorkers) imgBitmap = await createImageBitmap(img);
 
                 for (let r = 0; r < rows; r++) {
                     for (let c = 0; c < cols; c++) {
                         const startX = Math.round((c * img.width) / cols), endX = Math.round(((c + 1) * img.width) / cols);
                         const startY = Math.round((r * img.height) / rows), endY = Math.round(((r + 1) * img.height) / rows);
                         const sliceWidth = endX - startX, sliceHeight = endY - startY;
-                        const sliceFileName = `${baseName}_row${r+1}_col${c+1}.${ext}`;
+                        
+                        // تطبيق التصغير إذا كان وضع Ultra مفعل
+                        const targetWidth = Math.round(sliceWidth * scaleFactor);
+                        const targetHeight = Math.round(sliceHeight * scaleFactor);
 
-                        let taskPromise;
+                        // الحفاظ على مسار المجلد الأصلي للصور وتسمية الجزء
+                        const sliceFileName = `${folderPath}${baseName}_row${r+1}_col${c+1}.${ext}`;
 
-                        // 3. توزيع المهام (القص) على العمال في الخلفية بشكل متوازٍ
-                        if (supportsWorkers) {
-                            taskPromise = new Promise((resolve, reject) => {
+                        let taskPromise = new Promise((resolve, reject) => {
+                            if (supportsWorkers) {
                                 const worker = workers[currentWorkerIndex];
                                 currentWorkerIndex = (currentWorkerIndex + 1) % workers.length;
                                 const taskId = Math.random().toString(36);
@@ -437,51 +454,43 @@
                                     if (e.data.id === taskId) {
                                         worker.removeEventListener('message', handleMessage);
                                         if (e.data.success) {
-                                            zip.file(sliceFileName, e.data.blob); // إضافة مباشرة للـ ZIP
+                                            finalZip.file(sliceFileName, e.data.blob); // حفظ في مسار المجلد الصحيح داخل הـ ZIP
                                             resolve();
                                         } else reject(new Error(e.data.error));
                                     }
                                 };
                                 worker.addEventListener('message', handleMessage);
-                                worker.postMessage({ 
-                                    id: taskId, imgBitmap, startX, startY, sliceWidth, sliceHeight, 
-                                    mimeType, quality: outputQuality, bgColor 
-                                });
-                            });
-                        } else {
-                            // المتصفحات القديمة جداً (سيعمل كالسابق)
-                            taskPromise = new Promise((resolve) => {
-                                fallbackCanvas.width = sliceWidth; fallbackCanvas.height = sliceHeight;
-                                fallbackCtx.fillStyle = bgColor; fallbackCtx.fillRect(0, 0, sliceWidth, sliceHeight);
-                                fallbackCtx.drawImage(img, startX, startY, sliceWidth, sliceHeight, 0, 0, sliceWidth, sliceHeight);
-                                fallbackCanvas.toBlob((blob) => { zip.file(sliceFileName, blob); resolve(); }, mimeType, outputQuality);
-                            });
-                        }
-
-                        // تحديث شريط التقدم الفوري
-                        taskPromise.then(() => {
-                            completedTasks++;
-                            updateProgress((completedTasks / totalTasks) * 50, `جاري التقطيع الفائق: ${Math.round((completedTasks / totalTasks) * 100)}%`);
+                                worker.postMessage({ id: taskId, imgBitmap, startX, startY, sliceWidth, sliceHeight, targetWidth, targetHeight, mimeType, quality: outputQuality, bgColor });
+                            } else {
+                                // بديل للمتصفحات القديمة
+                                const cvs = document.createElement('canvas'); const ctx = cvs.getContext('2d');
+                                cvs.width = targetWidth; cvs.height = targetHeight;
+                                if(bgColor) { ctx.fillStyle = bgColor; ctx.fillRect(0,0,targetWidth,targetHeight); }
+                                ctx.drawImage(img, startX, startY, sliceWidth, sliceHeight, 0, 0, targetWidth, targetHeight);
+                                cvs.toBlob((blob) => { finalZip.file(sliceFileName, blob); resolve(); }, mimeType, outputQuality);
+                            }
                         });
 
+                        taskPromise.then(() => {
+                            completedTasks++;
+                            updateProgress((completedTasks / totalTasks) * 50, `جاري التقطيع ومعالجة المجلدات: ${Math.round((completedTasks / totalTasks) * 100)}%`);
+                        });
                         promises.push(taskPromise);
                     }
                 }
             }
 
-            // 4. تشغيل جميع المهام في نفس اللحظة (السرعة الحقيقية تبدأ هنا)
             await Promise.all(promises);
-
-            // إنهاء عمل الأنوية لتحرير الرام
             if (supportsWorkers) workers.forEach(w => w.terminate());
 
-            updateProgress(50, "جاري الضغط وإنشاء الـ ZIP...");
-            zip.generateAsync({ type: 'blob', compression: "DEFLATE", compressionOptions: { level: 6 } }, (metadata) => {
-                updateProgress(50 + (metadata.percent / 2), `جاري تجهيز الملف النهائي: ${Math.round(metadata.percent)}%`);
+            updateProgress(50, "جاري إعادة تجميع المجلدات في ZIP جديد...");
+            finalZip.generateAsync({ type: 'blob', compression: "DEFLATE", compressionOptions: { level: 6 } }, (metadata) => {
+                updateProgress(50 + (metadata.percent / 2), `جاري حفظ الملفات: ${Math.round(metadata.percent)}%`);
             }).then((content) => {
                 saveAs(content, `${fileName}.zip`);
-                updateProgress(100, "اكتمل التنزيل بنجاح!"); showToast("تم الانتهاء بسرعة فائقة!");
-                setTimeout(() => { document.getElementById('progressWrapper').style.display = 'none'; btn.disabled = false; }, 2000);
+                updateProgress(100, "تم الانتهاء! تم الحفاظ على المجلدات الأصلية."); 
+                showToast("نجاح باهر!");
+                setTimeout(() => { document.getElementById('progressWrapper').style.display = 'none'; btn.disabled = false; }, 3000);
             });
         });
     </script>
