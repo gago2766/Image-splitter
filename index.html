@@ -3,9 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>أداة تقسيم الصور (الإصدار المستقر وخفيف الذاكرة)</title>
+    <title>أداة تقسيم الصور (الإصدار الخارق V5)</title>
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+    
+    <!-- مكتبة fflate الصاروخية للـ ZIP بدلاً من JSZip القديمة -->
+    <script src="https://cdn.jsdelivr.net/npm/fflate@0.8.2/umd/index.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
     
     <style>
@@ -16,14 +18,29 @@
         header { background: var(--surface); padding: 1rem 2rem; box-shadow: 0 1px 3px rgba(0,0,0,0.1); display: flex; justify-content: space-between; align-items: center; z-index: 10; }
         header h1 { font-size: 1.5rem; font-weight: 800; background: linear-gradient(to left, var(--primary), var(--secondary)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; display: flex; align-items: center; gap: 10px; }
         .theme-toggle { background: var(--input-bg); border: 1px solid var(--border-color); color: var(--text-main); padding: 8px 12px; border-radius: 20px; cursor: pointer; display: flex; align-items: center; gap: 8px; font-weight: 600;}
-        .container { max-width: 1400px; margin: 0 auto; padding: 2rem; flex-grow: 1; display: flex; flex-direction: column; width: 100%; }
-        .upload-section { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 60vh; background: var(--surface); border: 3px dashed #cbd5e1; border-radius: var(--radius-lg); cursor: pointer; box-shadow: var(--shadow); }
+        
+        .container { max-width: 1400px; margin: 0 auto; padding: 1.5rem; flex-grow: 1; display: flex; flex-direction: column; width: 100%; }
+        
+        .upload-section { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 70vh; background: var(--surface); border: 3px dashed #cbd5e1; border-radius: var(--radius-lg); cursor: pointer; box-shadow: var(--shadow); }
         .upload-section:hover { border-color: var(--primary); background: rgba(79, 70, 229, 0.05); }
         .upload-icon { width: 80px; height: 80px; color: var(--primary); margin-bottom: 1rem; }
         .upload-text { font-size: 1.5rem; font-weight: 700; color: var(--text-main); text-align: center;}
-        .upload-sub { color: var(--text-muted); margin-top: 0.5rem; font-size: 1rem; text-align: center; }
-        .workspace { display: none; gap: 2rem; height: calc(100vh - 150px); }
-        .control-panel { width: 380px; background: var(--surface); border-radius: var(--radius-lg); padding: 2rem; box-shadow: var(--shadow); display: flex; flex-direction: column; gap: 1.5rem; overflow-y: auto; }
+        
+        /* ---------------- إصلاح الواجهة هنا ---------------- */
+        .workspace { display: none; flex-direction: column; gap: 1.5rem; width: 100%; }
+        
+        .control-panel { 
+            width: 100%; 
+            background: var(--surface); 
+            border-radius: var(--radius-lg); 
+            padding: 1.5rem; 
+            box-shadow: var(--shadow); 
+            display: grid; 
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); 
+            gap: 15px; 
+            align-items: end; 
+        }
+        
         .control-group label { display: block; font-weight: 600; margin-bottom: 0.5rem; color: var(--text-main); font-size: 0.95rem; }
         .highlight-label { color: var(--secondary) !important; display: flex; align-items: center; gap: 5px;}
         .input-field { width: 100%; padding: 12px 16px; border: 1px solid var(--border-color); border-radius: var(--radius-md); font-size: 1rem; background: var(--input-bg); color: var(--text-main); }
@@ -31,37 +48,43 @@
         .color-picker-wrapper { display: flex; align-items: center; gap: 10px; }
         .color-picker { -webkit-appearance: none; border: none; width: 40px; height: 40px; border-radius: 8px; cursor: pointer; padding: 0; background: none;}
         .color-picker::-webkit-color-swatch { border: 1px solid var(--border-color); border-radius: 8px; }
-        .btn { width: 100%; padding: 14px; border: none; border-radius: var(--radius-md); font-size: 1.1rem; font-weight: 700; cursor: pointer; display: flex; justify-content: center; align-items: center; gap: 8px; }
+        
+        .actions-row { grid-column: 1 / -1; display: flex; gap: 15px; margin-top: 10px; }
+        .btn { flex: 1; padding: 14px; border: none; border-radius: var(--radius-md); font-size: 1.1rem; font-weight: 700; cursor: pointer; display: flex; justify-content: center; align-items: center; gap: 8px; }
         .btn-primary { background: linear-gradient(90deg, var(--primary), #6366f1); color: white; box-shadow: 0 4px 6px -1px rgba(79, 70, 229, 0.3); }
         .btn-primary:disabled { background: #94a3b8; cursor: not-allowed; }
         .btn-outline { background: transparent; color: var(--text-main); border: 2px solid var(--border-color); }
-        .preview-area { flex-grow: 1; background: var(--surface); border-radius: var(--radius-lg); box-shadow: var(--shadow); display: flex; flex-direction: column; position: relative; overflow: hidden; }
+        
+        .preview-area { width: 100%; min-height: 500px; background: var(--surface); border-radius: var(--radius-lg); box-shadow: var(--shadow); display: flex; flex-direction: column; position: relative; overflow: hidden; }
+        /* ------------------------------------------------ */
+
         .preview-header { padding: 1rem 1.5rem; border-bottom: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center; background: var(--surface); }
         .image-nav { display: flex; align-items: center; gap: 15px; background: var(--input-bg); padding: 5px 15px; border-radius: 20px; font-weight: 600; border: 1px solid var(--border-color); }
         .nav-btn { background: none; border: none; cursor: pointer; color: var(--primary); font-size: 1.2rem; padding: 5px; border-radius: 50%; }
         .delete-btn { color: #ef4444; background: rgba(239, 68, 68, 0.1); border: none; padding: 8px 12px; border-radius: 8px; cursor: pointer; font-weight: 600; display: flex; align-items: center; gap: 5px;}
         .preview-container { flex-grow: 1; padding: 20px; overflow: auto; display: flex; align-items: center; justify-content: center; background: var(--input-bg); background-image: radial-gradient(var(--border-color) 1px, transparent 0); background-size: 20px 20px; }
         .canvas-wrapper { position: relative; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25); line-height: 0; background: white; }
-        #previewImage { max-width: 100%; max-height: calc(100vh - 250px); display: block; }
+        #previewImage { max-width: 100%; max-height: 60vh; display: block; }
         #gridOverlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: flex; flex-wrap: wrap; }
-        .grid-cell { box-sizing: border-box; outline: 1px solid rgba(236, 72, 153, 0.8); cursor: pointer; display: flex; align-items: center; justify-content: center; position: absolute; background: transparent; transition: background 0.2s; }
+        .grid-cell { box-sizing: border-box; outline: 1px solid rgba(236, 72, 153, 0.8); cursor: pointer; position: absolute; background: transparent; transition: background 0.2s; }
         .grid-cell:hover { background: rgba(236, 72, 153, 0.3); outline: 2px solid var(--secondary); z-index: 10; }
-        .progress-wrapper { display: none; margin-top: 15px; }
-        .progress-bar { width: 100%; height: 10px; background: var(--border-color); border-radius: 10px; overflow: hidden; position: relative;}
-        .progress-fill { width: 0%; height: 100%; background: linear-gradient(90deg, #10b981, #34d399); transition: width 0.2s; }
-        .progress-text { font-size: 0.85rem; color: var(--text-muted); text-align: center; margin-top: 5px; font-weight: 600;}
+        
+        .progress-wrapper { display: none; width: 100%; grid-column: 1 / -1; margin-bottom: 10px; }
+        .progress-bar { width: 100%; height: 12px; background: var(--border-color); border-radius: 10px; overflow: hidden; position: relative;}
+        .progress-fill { width: 0%; height: 100%; background: linear-gradient(90deg, #10b981, #34d399); transition: width 0.1s; }
+        .progress-text { font-size: 0.9rem; color: var(--text-muted); text-align: center; margin-top: 5px; font-weight: 700;}
+        
         #folderInfo { margin-top: 10px; font-size: 0.85rem; color: var(--primary); font-weight: 700; background: rgba(79, 70, 229, 0.1); padding: 5px 10px; border-radius: 8px; display: inline-block;}
         #toast { visibility: hidden; min-width: 250px; background-color: var(--primary); color: #fff; text-align: center; border-radius: 8px; padding: 16px; position: fixed; z-index: 100; left: 50%; bottom: 30px; transform: translateX(-50%); font-size: 1rem; box-shadow: var(--shadow); opacity: 0; transition: opacity 0.5s, bottom 0.5s; }
         #toast.show { visibility: visible; opacity: 1; bottom: 50px; }
-        @media (max-width: 900px) { .workspace { flex-direction: column; height: auto; } .control-panel { width: 100%; } #previewImage { max-height: 50vh; } }
     </style>
 </head>
 <body>
 
     <header>
         <h1>
-            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path></svg>
-            أداة القص مع دعم المجلدات (إصدار مستقر)
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"></path></svg>
+            أداة القص (فائقة السرعة V5)
         </h1>
         <button class="theme-toggle" onclick="toggleTheme()">
             <span id="themeText">ليلي</span>
@@ -70,13 +93,14 @@
 
     <div class="container">
         <div id="uploadSection" class="upload-section">
-            <svg class="upload-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
-            <div class="upload-text">اسحب وأفلت الصور أو ملف ZIP يحتوي على مجلدات</div>
-            <div class="upload-sub">معالجة دفعية (Batch Processing) تمنع انهيار الصفحة وتتحمل أحجاماً عملاقة</div>
+            <svg class="upload-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
+            <div class="upload-text">اسحب وأفلت الصور أو ملف ZIP للمجلدات</div>
             <input type="file" id="fileInput" accept="image/*,.zip" multiple style="display: none;">
         </div>
 
         <div id="workspace" class="workspace">
+            
+            <!-- لوحة التحكم في الأعلى -->
             <div class="control-panel">
                 <div class="control-group">
                     <label>طريقة التقسيم</label>
@@ -87,53 +111,53 @@
                     </select>
                 </div>
 
-                <div style="display:flex; gap:10px;">
-                    <div class="control-group" id="colControl" style="flex:1;">
-                        <label id="colLabel">الأعمدة</label>
-                        <input type="number" id="cols" class="input-field" min="1" max="100" value="3">
-                    </div>
-                    <div class="control-group" id="rowControl" style="flex:1;">
-                        <label id="rowLabel">الصفوف</label>
-                        <input type="number" id="rows" class="input-field" min="1" max="100" value="3">
-                    </div>
+                <div class="control-group" id="colControl">
+                    <label>الأعمدة</label>
+                    <input type="number" id="cols" class="input-field" min="1" max="100" value="3">
+                </div>
+                
+                <div class="control-group" id="rowControl">
+                    <label>الصفوف</label>
+                    <input type="number" id="rows" class="input-field" min="1" max="100" value="3">
                 </div>
 
                 <div class="control-group">
-                    <label class="highlight-label">حجم وجودة التصدير</label>
+                    <label class="highlight-label">الجودة (خفيف جداً 🚀)</label>
                     <select id="exportQuality" class="input-field">
-                        <option value="ultra">تحسين فائق للسوشيال ميديا (حجم خفيف 2-3 ميجا - جودة ممتازة)</option>
-                        <option value="smart">ضغط ذكي (نفس الأبعاد - جودة عالية وحجم متوسط)</option>
-                        <option value="webp">صيغة WebP (أصغر حجم للأبعاد الأصلية)</option>
-                        <option value="raw">جودة خام 100% (حجم ضخم جداً)</option>
+                        <option value="ultra">تحسين فائق (2-3 ميجا - جودة ممتازة)</option>
+                        <option value="smart">ضغط ذكي (متوسط)</option>
+                        <option value="webp">WebP (أصغر حجم)</option>
+                        <option value="raw">خام 100% (حجم ضخم)</option>
                     </select>
                 </div>
 
                 <div class="control-group">
-                    <label>لون خلفية الصور الشفافة (PNG)</label>
+                    <label>لون الخلفية (للـ PNG)</label>
                     <div class="color-picker-wrapper">
                         <input type="color" id="bgColor" class="color-picker" value="#ffffff">
                     </div>
                 </div>
 
                 <div class="control-group">
-                    <label>اسم ملف التنزيل (بدون .zip)</label>
-                    <input type="text" id="zipName" class="input-field" value="Split_Images_Stable">
+                    <label>اسم الملف (بدون zip)</label>
+                    <input type="text" id="zipName" class="input-field" value="Split_Images_Pro">
                 </div>
-
-                <div style="flex-grow: 1;"></div> 
 
                 <div class="progress-wrapper" id="progressWrapper">
                     <div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
                     <div class="progress-text" id="progressText">جاري المعالجة: 0%</div>
                 </div>
 
-                <button id="downloadBtn" class="btn btn-primary">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
-                    معالجة ذكية وتنزيل (ZIP سريع)
-                </button>
-                <button id="resetBtn" class="btn btn-outline" onclick="resetApp()">تفريغ والبدء من جديد</button>
+                <div class="actions-row">
+                    <button id="downloadBtn" class="btn btn-primary">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
+                        تطبيق وتنزيل فوري (ZIP)
+                    </button>
+                    <button id="resetBtn" class="btn btn-outline" onclick="resetApp()">البدء من جديد</button>
+                </div>
             </div>
 
+            <!-- مساحة الصورة في الأسفل -->
             <div class="preview-area">
                 <div class="preview-header">
                     <div style="display:flex; flex-direction:column;">
@@ -153,6 +177,7 @@
                     </div>
                 </div>
             </div>
+            
         </div>
     </div>
 
@@ -181,17 +206,19 @@
             const files = Array.from(fileList);
             if (files.length === 0) return;
 
-            showToast("جاري القراءة...");
+            showToast("جاري الاستخراج والقراءة...");
             currentImages =[]; currentViewIndex = 0;
 
             for (let file of files) {
                 if (file.name.toLowerCase().endsWith('.zip')) {
                     try {
-                        showToast(`استخراج مجلدات: ${file.name}`);
-                        const zip = await JSZip.loadAsync(file);
-                        for (const [relativePath, zipEntry] of Object.entries(zip.files)) {
-                            if (!zipEntry.dir && relativePath.match(/\.(jpe?g|png|webp)$/i)) {
-                                const blob = await zipEntry.async("blob");
+                        // استخدام fflate لفك الضغط بشكل خارق
+                        const arrayBuffer = await file.arrayBuffer();
+                        const unzipped = fflate.unzipSync(new Uint8Array(arrayBuffer));
+                        
+                        for (const [relativePath, uint8Array] of Object.entries(unzipped)) {
+                            if (uint8Array.length > 0 && relativePath.match(/\.(jpe?g|png|webp)$/i)) {
+                                const blob = new Blob([uint8Array]);
                                 const pathParts = relativePath.split('/');
                                 const fileName = pathParts.pop();
                                 const folderPath = pathParts.length > 0 ? pathParts.join('/') + '/' : '';
@@ -208,7 +235,7 @@
             }
             if (currentImages.length > 0) {
                 uploadSection.style.display = 'none'; workspace.style.display = 'flex';
-                updatePreview(); updateControls(); showToast(`تم تحميل ${currentImages.length} صورة`);
+                updatePreview(); updateControls(); showToast(`جاهز! (${currentImages.length} صورة)`);
             }
         }
 
@@ -226,9 +253,17 @@
         }
         function deleteCurrentImage() { if(currentImages.length===0) return; currentImages.splice(currentViewIndex, 1); if(currentImages.length===0) { resetApp(); return; } if(currentViewIndex >= currentImages.length) currentViewIndex = currentImages.length - 1; updatePreview(); }
         function resetApp() { currentImages =[]; fileInput.value = ""; currentViewIndex = 0; uploadSection.style.display = 'flex'; workspace.style.display = 'none'; }
-        function updateControls() { const type = splitType.value; colsInput.disabled = type === 'horizontal'; rowsInput.disabled = type === 'vertical'; if (type === 'vertical') rowsInput.value = 1; if (type === 'horizontal') colsInput.value = 1; updateGrid(); }
+        
+        function updateControls() { 
+            const type = splitType.value; 
+            document.getElementById('colControl').style.display = type === 'horizontal' ? 'none' : 'block';
+            document.getElementById('rowControl').style.display = type === 'vertical' ? 'none' : 'block';
+            if (type === 'vertical') rowsInput.value = 1; if (type === 'horizontal') colsInput.value = 1; 
+            updateGrid(); 
+        }
         splitType.addEventListener('change', updateControls); colsInput.addEventListener('input', updateGrid); rowsInput.addEventListener('input', updateGrid); window.addEventListener('resize', updateGrid);
         function validateInputs() { return { cols: Math.min(Math.max(parseInt(colsInput.value)||1, 1), 100), rows: Math.min(Math.max(parseInt(rowsInput.value)||1, 1), 100) }; }
+        
         function updateGrid() {
             if (currentImages.length === 0) return; gridOverlay.innerHTML = ''; const { cols, rows } = validateInputs();
             for (let r = 0; r < rows; r++) for (let c = 0; c < cols; c++) {
@@ -236,41 +271,83 @@
             }
         }
 
+        // ==========================================
+        // 🚀 نظام الطابور الذكي (Smart Worker Queue)
+        // ==========================================
         const workerScript = `
             self.onmessage = async function(e) {
-                const { id, imgBitmap, startX, startY, sliceWidth, sliceHeight, mimeType, quality, bgColor, targetWidth, targetHeight } = e.data;
+                const { taskId, imgBitmap, startX, startY, sliceWidth, sliceHeight, targetWidth, targetHeight, mimeType, quality, bgColor } = e.data;
                 try {
-                    const finalWidth = targetWidth || sliceWidth, finalHeight = targetHeight || sliceHeight;
-                    const canvas = new OffscreenCanvas(finalWidth, finalHeight);
+                    const canvas = new OffscreenCanvas(targetWidth, targetHeight);
                     const ctx = canvas.getContext('2d');
-                    if(bgColor && mimeType !== 'image/png') { ctx.fillStyle = bgColor; ctx.fillRect(0, 0, finalWidth, finalHeight); }
-                    ctx.drawImage(imgBitmap, startX, startY, sliceWidth, sliceHeight, 0, 0, finalWidth, finalHeight);
+                    if (bgColor && mimeType !== 'image/png') { ctx.fillStyle = bgColor; ctx.fillRect(0, 0, targetWidth, targetHeight); }
+                    ctx.drawImage(imgBitmap, startX, startY, sliceWidth, sliceHeight, 0, 0, targetWidth, targetHeight);
+                    
                     const blob = await canvas.convertToBlob({ type: mimeType, quality: quality });
-                    self.postMessage({ id, blob, success: true });
-                } catch (err) { self.postMessage({ id, error: err.message, success: false }); }
+                    const arrayBuffer = await blob.arrayBuffer(); // استخراج الذاكرة الخام
+                    
+                    // Zero-Copy Transfer نقل الذاكرة بلمح البصر 
+                    self.postMessage({ taskId, buffer: arrayBuffer, success: true }, [arrayBuffer]);
+                } catch (err) { self.postMessage({ taskId, error: err.message, success: false }); }
             };
         `;
 
+        class WorkerPool {
+            constructor(numWorkers) {
+                this.freeWorkers = []; this.queue = []; this.callbacks = new Map();
+                const blobURL = URL.createObjectURL(new Blob([workerScript], { type: 'application/javascript' }));
+                this.workers = [];
+                for (let i = 0; i < numWorkers; i++) {
+                    const worker = new Worker(blobURL);
+                    worker.onmessage = (e) => {
+                        const { taskId, buffer, error, success } = e.data;
+                        const cb = this.callbacks.get(taskId);
+                        this.callbacks.delete(taskId);
+                        this.freeWorkers.push(worker); // إرجاع العامل للطابور ليأخذ مهمة أخرى فوراً
+                        if (success) cb.resolve(buffer); else cb.reject(new Error(error));
+                        this.next();
+                    };
+                    this.freeWorkers.push(worker);
+                    this.workers.push(worker);
+                }
+            }
+            run(data) {
+                return new Promise((resolve, reject) => {
+                    const taskId = Math.random().toString(36);
+                    this.callbacks.set(taskId, { resolve, reject });
+                    this.queue.push({ taskId, data });
+                    this.next();
+                });
+            }
+            next() {
+                if (this.queue.length > 0 && this.freeWorkers.length > 0) {
+                    const task = this.queue.shift();
+                    const worker = this.freeWorkers.pop();
+                    worker.postMessage({ ...task.data, taskId: task.taskId });
+                }
+            }
+            terminate() { this.workers.forEach(w => w.terminate()); }
+        }
+
         document.getElementById('downloadBtn').addEventListener('click', async () => {
             if (currentImages.length === 0) return;
-            const finalZip = new JSZip(), { cols, rows } = validateInputs(), fileName = zipNameInput.value.trim() || 'Processed_Images';
+            const { cols, rows } = validateInputs(); const fileName = zipNameInput.value.trim() || 'Split_Images_Pro';
             const qualitySetting = exportQuality.value, bgColor = bgColorInput.value, btn = document.getElementById('downloadBtn');
 
             btn.disabled = true; document.getElementById('progressWrapper').style.display = 'block';
             const totalTasks = currentImages.length * rows * cols; let completedTasks = 0;
             const updateProgress = (percent, text) => { document.getElementById('progressFill').style.width = `${percent}%`; document.getElementById('progressText').innerText = text; };
 
-            updateProgress(0, "تهيئة المعالجة بالدفعات لضمان الاستقرار..."); 
             const supportsWorkers = typeof OffscreenCanvas !== 'undefined' && typeof createImageBitmap !== 'undefined';
-            let workers =[], currentWorkerIndex = 0;
-
+            let workerPool = null;
             if (supportsWorkers) {
                 const numWorkers = navigator.hardwareConcurrency || 4;
-                const blobURL = URL.createObjectURL(new Blob([workerScript], { type: 'application/javascript' }));
-                for (let i = 0; i < numWorkers; i++) workers.push(new Worker(blobURL));
+                workerPool = new WorkerPool(numWorkers);
             }
 
-            // الحل الجذري للانهيار: معالجة صورة واحدة في كل مرة (Batch Processing)
+            // مصفوفة لتجميع الملفات الجاهزة في الـ Uint8Array لضغطها في fflate
+            const zipFiles = {}; 
+
             for (let imgIndex = 0; imgIndex < currentImages.length; imgIndex++) {
                 const { img, file, folderPath } = currentImages[imgIndex];
                 let mimeType = 'image/jpeg', ext = 'jpg', outputQuality = 0.92, scaleFactor = 1.0;
@@ -283,11 +360,10 @@
                 } else { mimeType = file.type === 'image/png' ? 'image/png' : 'image/jpeg'; ext = mimeType === 'image/png' ? 'png' : 'jpg'; outputQuality = 0.92; }
                 
                 let baseName = file.name ? file.name.replace(/\.[^/.]+$/, "") : "image";
-                
                 let imgBitmap = null;
                 if (supportsWorkers) imgBitmap = await createImageBitmap(img);
 
-                const currentImagePromises = []; // تخزين الأجزاء الخاصة بهذه الصورة فقط
+                const currentImagePromises = []; 
 
                 for (let r = 0; r < rows; r++) {
                     for (let c = 0; c < cols; c++) {
@@ -297,56 +373,52 @@
                         const targetWidth = Math.round(sliceWidth * scaleFactor), targetHeight = Math.round(sliceHeight * scaleFactor);
                         const sliceFileName = `${folderPath}${baseName}_row${r+1}_col${c+1}.${ext}`;
 
-                        let taskPromise = new Promise((resolve, reject) => {
-                            if (supportsWorkers) {
-                                const worker = workers[currentWorkerIndex];
-                                currentWorkerIndex = (currentWorkerIndex + 1) % workers.length;
-                                const taskId = Math.random().toString(36);
-                                const handleMessage = (e) => {
-                                    if (e.data.id === taskId) {
-                                        worker.removeEventListener('message', handleMessage);
-                                        if (e.data.success) { finalZip.file(sliceFileName, e.data.blob); resolve(); } 
-                                        else reject(new Error(e.data.error));
-                                    }
-                                };
-                                worker.addEventListener('message', handleMessage);
-                                worker.postMessage({ id: taskId, imgBitmap, startX, startY, sliceWidth, sliceHeight, targetWidth, targetHeight, mimeType, quality: outputQuality, bgColor });
-                            } else {
+                        let taskPromise;
+                        if (supportsWorkers) {
+                            taskPromise = workerPool.run({ imgBitmap, startX, startY, sliceWidth, sliceHeight, targetWidth, targetHeight, mimeType, quality: outputQuality, bgColor })
+                                .then(buffer => {
+                                    zipFiles[sliceFileName] = new Uint8Array(buffer); // جاهز فوراً للـ fflate
+                                });
+                        } else {
+                            taskPromise = new Promise((resolve) => {
                                 const cvs = document.createElement('canvas'); const ctx = cvs.getContext('2d');
                                 cvs.width = targetWidth; cvs.height = targetHeight;
                                 if(bgColor) { ctx.fillStyle = bgColor; ctx.fillRect(0,0,targetWidth,targetHeight); }
                                 ctx.drawImage(img, startX, startY, sliceWidth, sliceHeight, 0, 0, targetWidth, targetHeight);
-                                cvs.toBlob((blob) => { finalZip.file(sliceFileName, blob); resolve(); }, mimeType, outputQuality);
-                            }
-                        });
+                                cvs.toBlob(async (blob) => { 
+                                    const arrayBuf = await blob.arrayBuffer();
+                                    zipFiles[sliceFileName] = new Uint8Array(arrayBuf);
+                                    resolve(); 
+                                }, mimeType, outputQuality);
+                            });
+                        }
 
                         taskPromise.then(() => {
                             completedTasks++;
-                            updateProgress((completedTasks / totalTasks) * 50, `جاري المعالجة (الرام محمي): ${Math.round((completedTasks / totalTasks) * 100)}%`);
+                            updateProgress((completedTasks / totalTasks) * 90, `جاري التقطيع الخارق: ${Math.round((completedTasks / totalTasks) * 100)}%`);
                         });
                         currentImagePromises.push(taskPromise);
                     }
                 }
 
-                // ننتظر انتهاء أجزاء هذه الصورة "فقط" قبل الانتقال للتي تليها (يمنع انهيار الرام نهائياً)
                 await Promise.all(currentImagePromises);
-
-                // تفريغ الرام فوراً بعد انتهاء الصورة
-                if (imgBitmap && imgBitmap.close) imgBitmap.close();
+                if (imgBitmap && imgBitmap.close) imgBitmap.close(); // تحرير الرام فوراً لكل صورة تنتهي
             }
 
-            if (supportsWorkers) workers.forEach(w => w.terminate());
+            if (workerPool) workerPool.terminate();
 
-            updateProgress(50, "جاري تجميع الملف في ZIP سريع (بدون ضغط إضافي)...");
+            updateProgress(95, "تجميع الـ ZIP بسرعه البرق ⚡ ...");
             
-            // السر الأكبر للسرعة: STORE تعني وضع الملفات فوراً في ZIP دون إعادة ضغطها مما يختصر 90% من الوقت ويحمي الرام!
-            finalZip.generateAsync({ type: 'blob', compression: "STORE" }, (metadata) => {
-                updateProgress(50 + (metadata.percent / 2), `حفظ الملف النهائي: ${Math.round(metadata.percent)}%`);
-            }).then((content) => {
-                saveAs(content, `${fileName}.zip`);
-                updateProgress(100, "تم الانتهاء بسرعة وبدون انهيار!"); showToast("نجاح باهر!");
+            // 🚀 استخدام fflate الصاروخية لتكوين الـ ZIP في مللي ثانية باستخدام الـ (Uint8Array)
+            setTimeout(() => {
+                const zipped = fflate.zipSync(zipFiles, { level: 0 }); // 0 (STORE) = أقصى سرعة ممكنة
+                const zipBlob = new Blob([zipped], { type: 'application/zip' });
+                
+                saveAs(zipBlob, `${fileName}.zip`);
+                updateProgress(100, "تم التنزيل بنجاح وبدون أي انهيار!"); 
+                showToast("اكتملت العملية بلمح البصر!");
                 setTimeout(() => { document.getElementById('progressWrapper').style.display = 'none'; btn.disabled = false; }, 3000);
-            });
+            }, 100);
         });
     </script>
 </body>
