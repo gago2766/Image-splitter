@@ -3,10 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>أداة تقسيم الصور (الإصدار الخارق V5)</title>
+    <title>أداة تقسيم الصور (إصدار ضغط المانجا الخارق)</title>
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet">
     
-    <!-- مكتبة fflate الصاروخية للـ ZIP بدلاً من JSZip القديمة -->
     <script src="https://cdn.jsdelivr.net/npm/fflate@0.8.2/umd/index.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
     
@@ -28,18 +27,7 @@
         
         .workspace { display: none; flex-direction: column; gap: 1.5rem; width: 100%; }
         
-        .control-panel { 
-            width: 100%; 
-            background: var(--surface); 
-            border-radius: var(--radius-lg); 
-            padding: 1.5rem; 
-            box-shadow: var(--shadow); 
-            display: grid; 
-            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); 
-            gap: 15px; 
-            align-items: end; 
-        }
-        
+        .control-panel { width: 100%; background: var(--surface); border-radius: var(--radius-lg); padding: 1.5rem; box-shadow: var(--shadow); display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; align-items: end; }
         .control-group label { display: block; font-weight: 600; margin-bottom: 0.5rem; color: var(--text-main); font-size: 0.95rem; }
         .highlight-label { color: var(--secondary) !important; display: flex; align-items: center; gap: 5px;}
         .input-field { width: 100%; padding: 12px 16px; border: 1px solid var(--border-color); border-radius: var(--radius-md); font-size: 1rem; background: var(--input-bg); color: var(--text-main); }
@@ -82,7 +70,7 @@
     <header>
         <h1>
             <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"></path></svg>
-            أداة القص (فائقة السرعة V5)
+            أداة القص (إصدار ضغط المانجا)
         </h1>
         <button class="theme-toggle" onclick="toggleTheme()">
             <span id="themeText">ليلي</span>
@@ -100,17 +88,17 @@
             
             <div class="control-panel">
                 <div class="control-group">
-                    <label>طريقة التقسيم</label>
+                    <label>التقسيم</label>
                     <select id="splitType" class="input-field">
+                        <option value="horizontal">صفوف (طولياً للمانجا)</option>
+                        <option value="vertical">أعمدة (عرضياً)</option>
                         <option value="grid">شبكة (طول وعرض)</option>
-                        <option value="vertical">أعمدة (طولياً)</option>
-                        <option value="horizontal">صفوف (عرضياً)</option>
                     </select>
                 </div>
 
-                <div class="control-group" id="colControl">
+                <div class="control-group" id="colControl" style="display:none;">
                     <label>الأعمدة</label>
-                    <input type="number" id="cols" class="input-field" min="1" max="100" value="3">
+                    <input type="number" id="cols" class="input-field" min="1" max="100" value="1">
                 </div>
                 
                 <div class="control-group" id="rowControl">
@@ -121,29 +109,31 @@
                 <div class="control-group">
                     <label class="highlight-label">القوالب الجاهزة</label>
                     <select id="exportQuality" class="input-field">
+                        <option value="ultra">للمانجا والويب تون (~70 كيلوبايت للصورة)</option>
                         <option value="smart">ضغط ذكي (متوسط)</option>
-                        <option value="ultra">تحسين فائق (2-3 ميجا - جودة ممتازة)</option>
-                        <option value="webp">WebP (أصغر حجم)</option>
+                        <option value="webp">WebP الأصلية (بدون تحجيم)</option>
                         <option value="raw">خام 100% (حجم ضخم)</option>
                     </select>
                 </div>
 
-                <!-- الشريط الجديد الذي تم إضافته -->
+                <!-- الخيار الجديد الذي يتحكم في الحجم بشكل سحري -->
                 <div class="control-group">
-                    <label>نسبة الجودة للصور: <span id="qualityValue" style="color: var(--secondary);">92</span>%</label>
-                    <input type="range" id="qualitySlider" min="1" max="100" value="92" class="input-field" style="padding: 0; border: none; box-shadow: none; background: transparent; cursor: pointer;">
+                    <label>عرض الصورة (تحجيم الأبعاد)</label>
+                    <select id="maxWidthSelector" class="input-field">
+                        <option value="800">800px (المعيار لرفع المانجا - حجم صغير جداً)</option>
+                        <option value="1080">1080px (حجم متوسط)</option>
+                        <option value="original">الأبعاد الأصلية (بدون تصغير)</option>
+                    </select>
                 </div>
 
                 <div class="control-group">
-                    <label>لون الخلفية (للـ PNG)</label>
-                    <div class="color-picker-wrapper">
-                        <input type="color" id="bgColor" class="color-picker" value="#ffffff">
-                    </div>
+                    <label>جودة الضغط: <span id="qualityValue" style="color: var(--secondary);">80</span>%</label>
+                    <input type="range" id="qualitySlider" min="1" max="100" value="80" class="input-field" style="padding: 0; border: none; box-shadow: none; background: transparent; cursor: pointer;">
                 </div>
 
                 <div class="control-group">
                     <label>اسم الملف (بدون zip)</label>
-                    <input type="text" id="zipName" class="input-field" value="Split_Images_Pro">
+                    <input type="text" id="zipName" class="input-field" value="Split_Manga">
                 </div>
 
                 <div class="progress-wrapper" id="progressWrapper">
@@ -154,7 +144,7 @@
                 <div class="actions-row">
                     <button id="downloadBtn" class="btn btn-primary">
                         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
-                        تطبيق وتنزيل فوري (ZIP)
+                        تقطيع وتنزيل فوري (ZIP)
                     </button>
                     <button id="resetBtn" class="btn btn-outline" onclick="resetApp()">البدء من جديد</button>
                 </div>
@@ -192,20 +182,20 @@
 
         const uploadSection = document.getElementById('uploadSection'), fileInput = document.getElementById('fileInput'), workspace = document.getElementById('workspace');
         const splitType = document.getElementById('splitType'), colsInput = document.getElementById('cols'), rowsInput = document.getElementById('rows');
-        const exportQuality = document.getElementById('exportQuality'), bgColorInput = document.getElementById('bgColor'), zipNameInput = document.getElementById('zipName');
+        const exportQuality = document.getElementById('exportQuality'), maxWidthSelector = document.getElementById('maxWidthSelector'), zipNameInput = document.getElementById('zipName');
         const previewImage = document.getElementById('previewImage'), gridOverlay = document.getElementById('gridOverlay');
         const imageNav = document.getElementById('imageNav'), imgCounterText = document.getElementById('imgCounterText'), folderInfo = document.getElementById('folderInfo');
         
-        // إعدادات الشريط الجديد
         const qualitySlider = document.getElementById('qualitySlider'), qualityValue = document.getElementById('qualityValue');
         qualitySlider.addEventListener('input', (e) => { qualityValue.innerText = e.target.value; });
         
-        // تحريك الشريط تلقائياً عند تغيير القالب
+        // تغيير الإعدادات تلقائياً حسب القالب
         exportQuality.addEventListener('change', (e) => {
-            let val = 92;
-            if (e.target.value === 'ultra') val = 85;
-            else if (e.target.value === 'webp') val = 90;
-            else if (e.target.value === 'raw') val = 100;
+            let val = 80;
+            if (e.target.value === 'ultra') { val = 80; maxWidthSelector.value = '800'; } // إعداد المانجا الخارق
+            else if (e.target.value === 'webp') { val = 90; maxWidthSelector.value = 'original'; }
+            else if (e.target.value === 'raw') { val = 100; maxWidthSelector.value = 'original'; }
+            else if (e.target.value === 'smart') { val = 92; maxWidthSelector.value = '1080'; }
             qualitySlider.value = val;
             qualityValue.innerText = val;
         });
@@ -273,7 +263,8 @@
             const type = splitType.value; 
             document.getElementById('colControl').style.display = type === 'horizontal' ? 'none' : 'block';
             document.getElementById('rowControl').style.display = type === 'vertical' ? 'none' : 'block';
-            if (type === 'vertical') rowsInput.value = 1; if (type === 'horizontal') colsInput.value = 1; 
+            if (type === 'vertical') { rowsInput.value = 1; if(colsInput.value < 2) colsInput.value = 2; } 
+            if (type === 'horizontal') { colsInput.value = 1; if(rowsInput.value < 2) rowsInput.value = 3; } 
             updateGrid(); 
         }
         splitType.addEventListener('change', updateControls); colsInput.addEventListener('input', updateGrid); rowsInput.addEventListener('input', updateGrid); window.addEventListener('resize', updateGrid);
@@ -286,22 +277,17 @@
             }
         }
 
-        // ==========================================
-        // 🚀 نظام الطابور الذكي (Smart Worker Queue)
-        // ==========================================
         const workerScript = `
             self.onmessage = async function(e) {
-                const { taskId, imgBitmap, startX, startY, sliceWidth, sliceHeight, targetWidth, targetHeight, mimeType, quality, bgColor } = e.data;
+                const { taskId, imgBitmap, startX, startY, sliceWidth, sliceHeight, targetWidth, targetHeight, mimeType, quality } = e.data;
                 try {
                     const canvas = new OffscreenCanvas(targetWidth, targetHeight);
                     const ctx = canvas.getContext('2d');
-                    if (bgColor && mimeType !== 'image/png') { ctx.fillStyle = bgColor; ctx.fillRect(0, 0, targetWidth, targetHeight); }
                     ctx.drawImage(imgBitmap, startX, startY, sliceWidth, sliceHeight, 0, 0, targetWidth, targetHeight);
                     
                     const blob = await canvas.convertToBlob({ type: mimeType, quality: quality });
-                    const arrayBuffer = await blob.arrayBuffer(); // استخراج الذاكرة الخام
+                    const arrayBuffer = await blob.arrayBuffer(); 
                     
-                    // Zero-Copy Transfer نقل الذاكرة بلمح البصر 
                     self.postMessage({ taskId, buffer: arrayBuffer, success: true }, [arrayBuffer]);
                 } catch (err) { self.postMessage({ taskId, error: err.message, success: false }); }
             };
@@ -318,7 +304,7 @@
                         const { taskId, buffer, error, success } = e.data;
                         const cb = this.callbacks.get(taskId);
                         this.callbacks.delete(taskId);
-                        this.freeWorkers.push(worker); // إرجاع العامل للطابور ليأخذ مهمة أخرى فوراً
+                        this.freeWorkers.push(worker); 
                         if (success) cb.resolve(buffer); else cb.reject(new Error(error));
                         this.next();
                     };
@@ -346,8 +332,8 @@
 
         document.getElementById('downloadBtn').addEventListener('click', async () => {
             if (currentImages.length === 0) return;
-            const { cols, rows } = validateInputs(); const fileName = zipNameInput.value.trim() || 'Split_Images_Pro';
-            const qualitySetting = exportQuality.value, bgColor = bgColorInput.value, btn = document.getElementById('downloadBtn');
+            const { cols, rows } = validateInputs(); const fileName = zipNameInput.value.trim() || 'Split_Manga';
+            const qualitySetting = exportQuality.value, btn = document.getElementById('downloadBtn');
 
             btn.disabled = true; document.getElementById('progressWrapper').style.display = 'block';
             const totalTasks = currentImages.length * rows * cols; let completedTasks = 0;
@@ -365,18 +351,21 @@
             for (let imgIndex = 0; imgIndex < currentImages.length; imgIndex++) {
                 const { img, file, folderPath } = currentImages[imgIndex];
                 
-                // استخدام قيمة شريط الجودة الذي أضفناه
-                let mimeType = 'image/jpeg', ext = 'jpg', outputQuality = parseInt(qualitySlider.value) / 100, scaleFactor = 1.0;
+                // قراءة شريط الجودة وتحديد الصيغة WebP أساسياً للضغط العالي
+                let mimeType = 'image/webp', ext = 'webp', outputQuality = parseInt(qualitySlider.value) / 100, scaleFactor = 1.0;
 
-                if (qualitySetting === 'ultra') {
-                    mimeType = 'image/webp'; ext = 'webp';
-                    if (img.width > 1080) scaleFactor = 1080 / img.width;
-                } else if (qualitySetting === 'webp') { 
-                    mimeType = 'image/webp'; ext = 'webp'; 
-                } else if (qualitySetting === 'raw') { 
-                    mimeType = file.type === 'image/png' ? 'image/png' : 'image/jpeg'; ext = mimeType === 'image/png' ? 'png' : 'jpg'; 
-                } else { 
-                    mimeType = file.type === 'image/png' ? 'image/png' : 'image/jpeg'; ext = mimeType === 'image/png' ? 'png' : 'jpg'; 
+                if (qualitySetting === 'raw') { 
+                    mimeType = file.type === 'image/png' ? 'image/png' : 'image/jpeg'; 
+                    ext = mimeType === 'image/png' ? 'png' : 'jpg'; 
+                } 
+                
+                // قراءة تحديد العرض (التحجيم) الذي يقلل الحجم 80% فوراً
+                const selectedMaxWidth = maxWidthSelector.value;
+                if (selectedMaxWidth !== 'original') {
+                    const maxW = parseInt(selectedMaxWidth);
+                    if (img.width > maxW) {
+                        scaleFactor = maxW / img.width;
+                    }
                 }
                 
                 let baseName = file.name ? file.name.replace(/\.[^/.]+$/, "") : "image";
@@ -390,12 +379,16 @@
                         const startX = Math.round((c * img.width) / cols), endX = Math.round(((c + 1) * img.width) / cols);
                         const startY = Math.round((r * img.height) / rows), endY = Math.round(((r + 1) * img.height) / rows);
                         const sliceWidth = endX - startX, sliceHeight = endY - startY;
+                        
+                        // تطبيق التحجيم
                         const targetWidth = Math.round(sliceWidth * scaleFactor), targetHeight = Math.round(sliceHeight * scaleFactor);
-                        const sliceFileName = `${folderPath}${baseName}_row${r+1}_col${c+1}.${ext}`;
+                        
+                        // ترقيم سهل للفصول
+                        const sliceFileName = `${folderPath}${baseName}_${String(r+1).padStart(2, '0')}.${ext}`;
 
                         let taskPromise;
                         if (supportsWorkers) {
-                            taskPromise = workerPool.run({ imgBitmap, startX, startY, sliceWidth, sliceHeight, targetWidth, targetHeight, mimeType, quality: outputQuality, bgColor })
+                            taskPromise = workerPool.run({ imgBitmap, startX, startY, sliceWidth, sliceHeight, targetWidth, targetHeight, mimeType, quality: outputQuality })
                                 .then(buffer => {
                                     zipFiles[sliceFileName] = new Uint8Array(buffer); 
                                 });
@@ -403,7 +396,6 @@
                             taskPromise = new Promise((resolve) => {
                                 const cvs = document.createElement('canvas'); const ctx = cvs.getContext('2d');
                                 cvs.width = targetWidth; cvs.height = targetHeight;
-                                if(bgColor) { ctx.fillStyle = bgColor; ctx.fillRect(0,0,targetWidth,targetHeight); }
                                 ctx.drawImage(img, startX, startY, sliceWidth, sliceHeight, 0, 0, targetWidth, targetHeight);
                                 cvs.toBlob(async (blob) => { 
                                     const arrayBuf = await blob.arrayBuffer();
@@ -415,7 +407,7 @@
 
                         taskPromise.then(() => {
                             completedTasks++;
-                            updateProgress((completedTasks / totalTasks) * 90, `جاري التقطيع الخارق: ${Math.round((completedTasks / totalTasks) * 100)}%`);
+                            updateProgress((completedTasks / totalTasks) * 90, `جاري التقطيع والضغط: ${Math.round((completedTasks / totalTasks) * 100)}%`);
                         });
                         currentImagePromises.push(taskPromise);
                     }
@@ -434,8 +426,8 @@
                 const zipBlob = new Blob([zipped], { type: 'application/zip' });
                 
                 saveAs(zipBlob, `${fileName}.zip`);
-                updateProgress(100, "تم التنزيل بنجاح وبدون أي انهيار!"); 
-                showToast("اكتملت العملية بلمح البصر!");
+                updateProgress(100, "تم التنزيل بنجاح!"); 
+                showToast("اكتملت العملية!");
                 setTimeout(() => { document.getElementById('progressWrapper').style.display = 'none'; btn.disabled = false; }, 3000);
             }, 100);
         });
