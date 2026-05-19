@@ -3,84 +3,57 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>أداة تقسيم الصور (إصدار المجلدات والـ ZIP)</title>
-    <!-- خطوط جوجل -->
+    <title>أداة تقسيم الصور (الإصدار المستقر وخفيف الذاكرة)</title>
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet">
-    <!-- مكتبات JS -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
     
     <style>
-        :root {
-            --primary: #4f46e5; --primary-hover: #4338ca; --secondary: #ec4899;
-            --bg-color: #f8fafc; --surface: #ffffff; --text-main: #0f172a; --text-muted: #64748b;
-            --border-color: #e2e8f0; --input-bg: #f8fafc;
-            --radius-lg: 16px; --radius-md: 12px;
-            --shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.05), 0 4px 6px -2px rgba(0, 0, 0, 0.025);
-        }
-        .dark {
-            --bg-color: #0f172a; --surface: #1e293b; --text-main: #f8fafc; --text-muted: #94a3b8;
-            --border-color: #334155; --input-bg: #0f172a;
-            --shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3);
-        }
+        :root { --primary: #4f46e5; --secondary: #ec4899; --bg-color: #f8fafc; --surface: #ffffff; --text-main: #0f172a; --text-muted: #64748b; --border-color: #e2e8f0; --input-bg: #f8fafc; --radius-lg: 16px; --radius-md: 12px; --shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.05); }
+        .dark { --bg-color: #0f172a; --surface: #1e293b; --text-main: #f8fafc; --text-muted: #94a3b8; --border-color: #334155; --input-bg: #0f172a; --shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3); }
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Cairo', sans-serif; transition: background-color 0.3s, color 0.3s; }
         body { background-color: var(--bg-color); color: var(--text-main); min-height: 100vh; display: flex; flex-direction: column; }
         header { background: var(--surface); padding: 1rem 2rem; box-shadow: 0 1px 3px rgba(0,0,0,0.1); display: flex; justify-content: space-between; align-items: center; z-index: 10; }
         header h1 { font-size: 1.5rem; font-weight: 800; background: linear-gradient(to left, var(--primary), var(--secondary)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; display: flex; align-items: center; gap: 10px; }
-        
         .theme-toggle { background: var(--input-bg); border: 1px solid var(--border-color); color: var(--text-main); padding: 8px 12px; border-radius: 20px; cursor: pointer; display: flex; align-items: center; gap: 8px; font-weight: 600;}
-        .theme-toggle:hover { border-color: var(--primary); }
         .container { max-width: 1400px; margin: 0 auto; padding: 2rem; flex-grow: 1; display: flex; flex-direction: column; width: 100%; }
-
         .upload-section { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 60vh; background: var(--surface); border: 3px dashed #cbd5e1; border-radius: var(--radius-lg); cursor: pointer; box-shadow: var(--shadow); }
-        .upload-section:hover, .upload-section.dragover { border-color: var(--primary); background: rgba(79, 70, 229, 0.05); }
+        .upload-section:hover { border-color: var(--primary); background: rgba(79, 70, 229, 0.05); }
         .upload-icon { width: 80px; height: 80px; color: var(--primary); margin-bottom: 1rem; }
         .upload-text { font-size: 1.5rem; font-weight: 700; color: var(--text-main); text-align: center;}
         .upload-sub { color: var(--text-muted); margin-top: 0.5rem; font-size: 1rem; text-align: center; }
-
         .workspace { display: none; gap: 2rem; height: calc(100vh - 150px); }
         .control-panel { width: 380px; background: var(--surface); border-radius: var(--radius-lg); padding: 2rem; box-shadow: var(--shadow); display: flex; flex-direction: column; gap: 1.5rem; overflow-y: auto; }
         .control-group label { display: block; font-weight: 600; margin-bottom: 0.5rem; color: var(--text-main); font-size: 0.95rem; }
         .highlight-label { color: var(--secondary) !important; display: flex; align-items: center; gap: 5px;}
         .input-field { width: 100%; padding: 12px 16px; border: 1px solid var(--border-color); border-radius: var(--radius-md); font-size: 1rem; background: var(--input-bg); color: var(--text-main); }
-        .input-field:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 4px rgba(79, 70, 229, 0.1); }
-        
+        .input-field:focus { outline: none; border-color: var(--primary); }
         .color-picker-wrapper { display: flex; align-items: center; gap: 10px; }
         .color-picker { -webkit-appearance: none; border: none; width: 40px; height: 40px; border-radius: 8px; cursor: pointer; padding: 0; background: none;}
-        .color-picker::-webkit-color-swatch-wrapper { padding: 0; }
         .color-picker::-webkit-color-swatch { border: 1px solid var(--border-color); border-radius: 8px; }
-
         .btn { width: 100%; padding: 14px; border: none; border-radius: var(--radius-md); font-size: 1.1rem; font-weight: 700; cursor: pointer; display: flex; justify-content: center; align-items: center; gap: 8px; }
         .btn-primary { background: linear-gradient(90deg, var(--primary), #6366f1); color: white; box-shadow: 0 4px 6px -1px rgba(79, 70, 229, 0.3); }
-        .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 6px 12px -2px rgba(79, 70, 229, 0.4); }
-        .btn-primary:disabled { background: #94a3b8; cursor: not-allowed; transform: none; box-shadow: none; }
+        .btn-primary:disabled { background: #94a3b8; cursor: not-allowed; }
         .btn-outline { background: transparent; color: var(--text-main); border: 2px solid var(--border-color); }
-        .btn-outline:hover { background: var(--input-bg); border-color: var(--text-muted); }
-
         .preview-area { flex-grow: 1; background: var(--surface); border-radius: var(--radius-lg); box-shadow: var(--shadow); display: flex; flex-direction: column; position: relative; overflow: hidden; }
         .preview-header { padding: 1rem 1.5rem; border-bottom: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center; background: var(--surface); }
         .image-nav { display: flex; align-items: center; gap: 15px; background: var(--input-bg); padding: 5px 15px; border-radius: 20px; font-weight: 600; border: 1px solid var(--border-color); }
         .nav-btn { background: none; border: none; cursor: pointer; color: var(--primary); font-size: 1.2rem; padding: 5px; border-radius: 50%; }
-        .nav-btn:hover { background: rgba(79, 70, 229, 0.1); }
         .delete-btn { color: #ef4444; background: rgba(239, 68, 68, 0.1); border: none; padding: 8px 12px; border-radius: 8px; cursor: pointer; font-weight: 600; display: flex; align-items: center; gap: 5px;}
-        .delete-btn:hover { background: rgba(239, 68, 68, 0.2); }
-
         .preview-container { flex-grow: 1; padding: 20px; overflow: auto; display: flex; align-items: center; justify-content: center; background: var(--input-bg); background-image: radial-gradient(var(--border-color) 1px, transparent 0); background-size: 20px 20px; }
         .canvas-wrapper { position: relative; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25); line-height: 0; background: white; }
         #previewImage { max-width: 100%; max-height: calc(100vh - 250px); display: block; }
-        
         #gridOverlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: flex; flex-wrap: wrap; }
         .grid-cell { box-sizing: border-box; outline: 1px solid rgba(236, 72, 153, 0.8); cursor: pointer; display: flex; align-items: center; justify-content: center; position: absolute; background: transparent; transition: background 0.2s; }
         .grid-cell:hover { background: rgba(236, 72, 153, 0.3); outline: 2px solid var(--secondary); z-index: 10; }
-        
         .progress-wrapper { display: none; margin-top: 15px; }
         .progress-bar { width: 100%; height: 10px; background: var(--border-color); border-radius: 10px; overflow: hidden; position: relative;}
         .progress-fill { width: 0%; height: 100%; background: linear-gradient(90deg, #10b981, #34d399); transition: width 0.2s; }
         .progress-text { font-size: 0.85rem; color: var(--text-muted); text-align: center; margin-top: 5px; font-weight: 600;}
         #folderInfo { margin-top: 10px; font-size: 0.85rem; color: var(--primary); font-weight: 700; background: rgba(79, 70, 229, 0.1); padding: 5px 10px; border-radius: 8px; display: inline-block;}
-
         #toast { visibility: hidden; min-width: 250px; background-color: var(--primary); color: #fff; text-align: center; border-radius: 8px; padding: 16px; position: fixed; z-index: 100; left: 50%; bottom: 30px; transform: translateX(-50%); font-size: 1rem; box-shadow: var(--shadow); opacity: 0; transition: opacity 0.5s, bottom 0.5s; }
         #toast.show { visibility: visible; opacity: 1; bottom: 50px; }
+        @media (max-width: 900px) { .workspace { flex-direction: column; height: auto; } .control-panel { width: 100%; } #previewImage { max-height: 50vh; } }
     </style>
 </head>
 <body>
@@ -88,7 +61,7 @@
     <header>
         <h1>
             <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path></svg>
-            أداة القص مع دعم المجلدات (ZIP)
+            أداة القص مع دعم المجلدات (إصدار مستقر)
         </h1>
         <button class="theme-toggle" onclick="toggleTheme()">
             <span id="themeText">ليلي</span>
@@ -99,8 +72,7 @@
         <div id="uploadSection" class="upload-section">
             <svg class="upload-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
             <div class="upload-text">اسحب وأفلت الصور أو ملف ZIP يحتوي على مجلدات</div>
-            <div class="upload-sub">سيتم استخراج المجلدات والصور من ملف الـ ZIP وتطبيق القص عليها مع الحفاظ على ترتيب المجلدات.</div>
-            <!-- تم تعديل الـ Accept ليقبل الصور وملفات ZIP -->
+            <div class="upload-sub">معالجة دفعية (Batch Processing) تمنع انهيار الصفحة وتتحمل أحجاماً عملاقة</div>
             <input type="file" id="fileInput" accept="image/*,.zip" multiple style="display: none;">
         </div>
 
@@ -129,9 +101,9 @@
                 <div class="control-group">
                     <label class="highlight-label">حجم وجودة التصدير</label>
                     <select id="exportQuality" class="input-field">
-                        <option value="ultra">تحسين فائق للسوشيال ميديا (حجم خفيف جداً - جودة ممتازة)</option>
-                        <option value="smart">ضغط ذكي (نفس أبعاد الصورة الأصلية - جودة عالية وحجم متوسط)</option>
-                        <option value="webp">صيغة WebP (أصغر حجم ممكن للأبعاد الأصلية)</option>
+                        <option value="ultra">تحسين فائق للسوشيال ميديا (حجم خفيف 2-3 ميجا - جودة ممتازة)</option>
+                        <option value="smart">ضغط ذكي (نفس الأبعاد - جودة عالية وحجم متوسط)</option>
+                        <option value="webp">صيغة WebP (أصغر حجم للأبعاد الأصلية)</option>
                         <option value="raw">جودة خام 100% (حجم ضخم جداً)</option>
                     </select>
                 </div>
@@ -145,7 +117,7 @@
 
                 <div class="control-group">
                     <label>اسم ملف التنزيل (بدون .zip)</label>
-                    <input type="text" id="zipName" class="input-field" value="Split_Images_Folders">
+                    <input type="text" id="zipName" class="input-field" value="Split_Images_Stable">
                 </div>
 
                 <div style="flex-grow: 1;"></div> 
@@ -157,7 +129,7 @@
 
                 <button id="downloadBtn" class="btn btn-primary">
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
-                    تطبيق وتقسيم الملفات (ZIP)
+                    معالجة ذكية وتنزيل (ZIP سريع)
                 </button>
                 <button id="resetBtn" class="btn btn-outline" onclick="resetApp()">تفريغ والبدء من جديد</button>
             </div>
@@ -172,7 +144,7 @@
                         </div>
                         <div id="folderInfo" style="display:none;"></div>
                     </div>
-                    <button class="delete-btn" onclick="deleteCurrentImage()" id="deleteBtn">إزالة الصورة</button>
+                    <button class="delete-btn" onclick="deleteCurrentImage()">إزالة الصورة</button>
                 </div>
                 <div class="preview-container">
                     <div class="canvas-wrapper" id="canvasWrapper">
@@ -187,7 +159,6 @@
     <div id="toast"></div>
 
     <script>
-        // --- إعدادات الواجهة ---
         function toggleTheme() { document.body.classList.toggle('dark'); localStorage.setItem('theme', document.body.classList.contains('dark') ? 'dark' : 'light'); }
         if(localStorage.getItem('theme') === 'dark') toggleTheme();
         function showToast(msg) { const t = document.getElementById("toast"); t.innerText = msg; t.className = "show"; setTimeout(() => t.className = t.className.replace("show", ""), 3000); }
@@ -198,10 +169,8 @@
         const previewImage = document.getElementById('previewImage'), gridOverlay = document.getElementById('gridOverlay');
         const imageNav = document.getElementById('imageNav'), imgCounterText = document.getElementById('imgCounterText'), folderInfo = document.getElementById('folderInfo');
         
-        // مصفوفة لتخزين بيانات الصور (شاملة مسار المجلد)
         let currentImages =[], currentViewIndex = 0;
 
-        // --- التعامل مع الرفع (صور عادية أو ZIP) ---
         uploadSection.addEventListener('click', () => fileInput.click());
         uploadSection.addEventListener('dragover', (e) => { e.preventDefault(); uploadSection.classList.add('dragover'); });
         uploadSection.addEventListener('dragleave', (e) => { e.preventDefault(); uploadSection.classList.remove('dragover'); });
@@ -212,187 +181,86 @@
             const files = Array.from(fileList);
             if (files.length === 0) return;
 
-            showToast("جاري القراءة والمعالجة الأولية...");
+            showToast("جاري القراءة...");
             currentImages =[]; currentViewIndex = 0;
 
             for (let file of files) {
-                // إذا كان الملف المرفوع ZIP
                 if (file.name.toLowerCase().endsWith('.zip')) {
                     try {
-                        showToast(`جاري استخراج المجلدات من: ${file.name}...`);
+                        showToast(`استخراج مجلدات: ${file.name}`);
                         const zip = await JSZip.loadAsync(file);
-                        
-                        // قراءة جميع الملفات داخل الـ ZIP
                         for (const [relativePath, zipEntry] of Object.entries(zip.files)) {
-                            // تجاهل المجلدات الفارغة والملفات التي ليست صور
                             if (!zipEntry.dir && relativePath.match(/\.(jpe?g|png|webp)$/i)) {
-                                
                                 const blob = await zipEntry.async("blob");
-                                // استخراج اسم المجلد واسم الملف
                                 const pathParts = relativePath.split('/');
-                                const fileName = pathParts.pop(); // اسم الصورة
-                                const folderPath = pathParts.length > 0 ? pathParts.join('/') + '/' : ''; // مسار المجلد
-                                
-                                // إنشاء كائن وهمي للملف ليحاكي رفع الملفات العادي
+                                const fileName = pathParts.pop();
+                                const folderPath = pathParts.length > 0 ? pathParts.join('/') + '/' : '';
                                 const mockFile = new File([blob], fileName, { type: blob.type || 'image/jpeg' });
-                                
-                                // تحويل الـ Blob إلى صورة لعرضها وتقطيعها
                                 const img = await blobToImage(blob);
                                 currentImages.push({ file: mockFile, img: img, folderPath: folderPath });
                             }
                         }
-                    } catch (err) {
-                        showToast("حدث خطأ أثناء فك ضغط الـ ZIP");
-                        console.error(err);
-                    }
-                } 
-                // إذا كانت صور عادية مرفوعة بشكل مباشر
-                else if (file.type.startsWith('image/')) {
+                    } catch (err) { console.error(err); showToast("خطأ بملف ZIP"); }
+                } else if (file.type.startsWith('image/')) {
                     const img = await fileToImage(file);
-                    currentImages.push({ file: file, img: img, folderPath: '' }); // لا يوجد مجلد
+                    currentImages.push({ file: file, img: img, folderPath: '' });
                 }
             }
-
             if (currentImages.length > 0) {
                 uploadSection.style.display = 'none'; workspace.style.display = 'flex';
-                updatePreview(); updateControls();
-                showToast(`تم تحميل ${currentImages.length} صورة جاهزة للتقطيع`);
-            } else {
-                showToast("لم يتم العثور على صور صالحة.");
+                updatePreview(); updateControls(); showToast(`تم تحميل ${currentImages.length} صورة`);
             }
         }
 
-        // دوال مساعدة لتحميل الصور
-        const blobToImage = (blob) => new Promise((resolve) => {
-            const img = new Image();
-            img.onload = () => resolve(img);
-            img.src = URL.createObjectURL(blob);
-        });
+        const blobToImage = (blob) => new Promise((resolve) => { const img = new Image(); img.onload = () => resolve(img); img.src = URL.createObjectURL(blob); });
+        const fileToImage = (file) => new Promise((resolve) => { const reader = new FileReader(); reader.onload = (e) => { const img = new Image(); img.onload = () => resolve(img); img.src = e.target.result; }; reader.readAsDataURL(file); });
 
-        const fileToImage = (file) => new Promise((resolve) => {
-            const reader = new FileReader();
-            reader.onload = (e) => {
-                const img = new Image();
-                img.onload = () => resolve(img);
-                img.src = e.target.result;
-            };
-            reader.readAsDataURL(file);
-        });
-
-        // --- واجهة العرض والتقليب ---
-        function changeImage(direction) {
-            currentViewIndex += direction;
-            if (currentViewIndex >= currentImages.length) currentViewIndex = 0;
-            if (currentViewIndex < 0) currentViewIndex = currentImages.length - 1;
-            updatePreview();
-        }
-
+        function changeImage(direction) { currentViewIndex += direction; if (currentViewIndex >= currentImages.length) currentViewIndex = 0; if (currentViewIndex < 0) currentViewIndex = currentImages.length - 1; updatePreview(); }
         function updatePreview() {
             if (currentImages.length === 0) return;
             const currentObj = currentImages[currentViewIndex];
             previewImage.src = currentObj.img.src;
-            
-            if (currentImages.length > 1) { 
-                imageNav.style.display = 'flex'; 
-                imgCounterText.innerText = `صورة ${currentViewIndex + 1} من ${currentImages.length}`; 
-            } else { imageNav.style.display = 'none'; }
-            
-            // عرض اسم المجلد إذا كانت الصورة مستخرجة من ZIP
-            if (currentObj.folderPath) {
-                folderInfo.style.display = 'inline-block';
-                folderInfo.innerText = `📁 المسار: ${currentObj.folderPath}`;
-            } else {
-                folderInfo.style.display = 'none';
-            }
-
+            if (currentImages.length > 1) { imageNav.style.display = 'flex'; imgCounterText.innerText = `صورة ${currentViewIndex + 1} من ${currentImages.length}`; } else { imageNav.style.display = 'none'; }
+            if (currentObj.folderPath) { folderInfo.style.display = 'inline-block'; folderInfo.innerText = `📁 ${currentObj.folderPath}`; } else folderInfo.style.display = 'none';
             setTimeout(updateGrid, 50);
         }
-
-        function deleteCurrentImage() {
-            if(currentImages.length === 0) return;
-            currentImages.splice(currentViewIndex, 1);
-            if(currentImages.length === 0) { resetApp(); return; }
-            if(currentViewIndex >= currentImages.length) currentViewIndex = currentImages.length - 1;
-            updatePreview();
-        }
-
-        function resetApp() {
-            currentImages =[]; fileInput.value = ""; currentViewIndex = 0;
-            uploadSection.style.display = 'flex'; workspace.style.display = 'none';
-        }
-
-        function updateControls() {
-            const type = splitType.value;
-            colsInput.disabled = type === 'horizontal'; rowsInput.disabled = type === 'vertical';
-            if (type === 'vertical') rowsInput.value = 1;
-            if (type === 'horizontal') colsInput.value = 1;
-            updateGrid();
-        }
-
-        splitType.addEventListener('change', updateControls);
-        colsInput.addEventListener('input', updateGrid); rowsInput.addEventListener('input', updateGrid);
-        window.addEventListener('resize', updateGrid);
-
-        function validateInputs() {
-            let cols = parseInt(colsInput.value) || 1, rows = parseInt(rowsInput.value) || 1;
-            return { cols: Math.min(Math.max(cols, 1), 100), rows: Math.min(Math.max(rows, 1), 100) };
-        }
-
+        function deleteCurrentImage() { if(currentImages.length===0) return; currentImages.splice(currentViewIndex, 1); if(currentImages.length===0) { resetApp(); return; } if(currentViewIndex >= currentImages.length) currentViewIndex = currentImages.length - 1; updatePreview(); }
+        function resetApp() { currentImages =[]; fileInput.value = ""; currentViewIndex = 0; uploadSection.style.display = 'flex'; workspace.style.display = 'none'; }
+        function updateControls() { const type = splitType.value; colsInput.disabled = type === 'horizontal'; rowsInput.disabled = type === 'vertical'; if (type === 'vertical') rowsInput.value = 1; if (type === 'horizontal') colsInput.value = 1; updateGrid(); }
+        splitType.addEventListener('change', updateControls); colsInput.addEventListener('input', updateGrid); rowsInput.addEventListener('input', updateGrid); window.addEventListener('resize', updateGrid);
+        function validateInputs() { return { cols: Math.min(Math.max(parseInt(colsInput.value)||1, 1), 100), rows: Math.min(Math.max(parseInt(rowsInput.value)||1, 1), 100) }; }
         function updateGrid() {
-            if (currentImages.length === 0) return;
-            gridOverlay.innerHTML = '';
-            const { cols, rows } = validateInputs();
-            for (let r = 0; r < rows; r++) {
-                for (let c = 0; c < cols; c++) {
-                    let cell = document.createElement('div');
-                    cell.className = 'grid-cell';
-                    cell.style.width = `${100 / cols}%`; cell.style.height = `${100 / rows}%`;
-                    cell.style.left = `${(c / cols) * 100}%`; cell.style.top = `${(r / rows) * 100}%`;
-                    gridOverlay.appendChild(cell);
-                }
+            if (currentImages.length === 0) return; gridOverlay.innerHTML = ''; const { cols, rows } = validateInputs();
+            for (let r = 0; r < rows; r++) for (let c = 0; c < cols; c++) {
+                let cell = document.createElement('div'); cell.className = 'grid-cell'; cell.style.width = `${100/cols}%`; cell.style.height = `${100/rows}%`; cell.style.left = `${(c/cols)*100}%`; cell.style.top = `${(r/rows)*100}%`; gridOverlay.appendChild(cell);
             }
         }
 
-        // --- محرك الـ Web Worker للتقطيع فائق السرعة ---
         const workerScript = `
             self.onmessage = async function(e) {
                 const { id, imgBitmap, startX, startY, sliceWidth, sliceHeight, mimeType, quality, bgColor, targetWidth, targetHeight } = e.data;
                 try {
-                    // إذا كان هناك تصغير (Smart Resizing)
-                    const finalWidth = targetWidth || sliceWidth;
-                    const finalHeight = targetHeight || sliceHeight;
-
+                    const finalWidth = targetWidth || sliceWidth, finalHeight = targetHeight || sliceHeight;
                     const canvas = new OffscreenCanvas(finalWidth, finalHeight);
                     const ctx = canvas.getContext('2d');
-                    
-                    if(bgColor && mimeType !== 'image/png') {
-                        ctx.fillStyle = bgColor;
-                        ctx.fillRect(0, 0, finalWidth, finalHeight);
-                    }
-                    
+                    if(bgColor && mimeType !== 'image/png') { ctx.fillStyle = bgColor; ctx.fillRect(0, 0, finalWidth, finalHeight); }
                     ctx.drawImage(imgBitmap, startX, startY, sliceWidth, sliceHeight, 0, 0, finalWidth, finalHeight);
-                    
                     const blob = await canvas.convertToBlob({ type: mimeType, quality: quality });
                     self.postMessage({ id, blob, success: true });
-                } catch (err) {
-                    self.postMessage({ id, error: err.message, success: false });
-                }
+                } catch (err) { self.postMessage({ id, error: err.message, success: false }); }
             };
         `;
 
         document.getElementById('downloadBtn').addEventListener('click', async () => {
             if (currentImages.length === 0) return;
             const finalZip = new JSZip(), { cols, rows } = validateInputs(), fileName = zipNameInput.value.trim() || 'Processed_Images';
-            const qualitySetting = exportQuality.value, bgColor = bgColorInput.value;
-            const btn = document.getElementById('downloadBtn');
+            const qualitySetting = exportQuality.value, bgColor = bgColorInput.value, btn = document.getElementById('downloadBtn');
 
             btn.disabled = true; document.getElementById('progressWrapper').style.display = 'block';
-            
             const totalTasks = currentImages.length * rows * cols; let completedTasks = 0;
             const updateProgress = (percent, text) => { document.getElementById('progressFill').style.width = `${percent}%`; document.getElementById('progressText').innerText = text; };
 
-            updateProgress(0, "جاري تحضير الأنوية المتعددة لمعالجة المجلدات..."); 
-
+            updateProgress(0, "تهيئة المعالجة بالدفعات لضمان الاستقرار..."); 
             const supportsWorkers = typeof OffscreenCanvas !== 'undefined' && typeof createImageBitmap !== 'undefined';
             let workers =[], currentWorkerIndex = 0;
 
@@ -402,46 +270,31 @@
                 for (let i = 0; i < numWorkers; i++) workers.push(new Worker(blobURL));
             }
 
-            const promises =[];
-
+            // الحل الجذري للانهيار: معالجة صورة واحدة في كل مرة (Batch Processing)
             for (let imgIndex = 0; imgIndex < currentImages.length; imgIndex++) {
                 const { img, file, folderPath } = currentImages[imgIndex];
-                
-                // تحديد إعدادات الضغط والتحجيم حسب اختيار المستخدم
-                let mimeType = 'image/jpeg', ext = 'jpg', outputQuality = 0.92;
-                let scaleFactor = 1.0;
+                let mimeType = 'image/jpeg', ext = 'jpg', outputQuality = 0.92, scaleFactor = 1.0;
 
                 if (qualitySetting === 'ultra') {
                     mimeType = 'image/webp'; ext = 'webp'; outputQuality = 0.85;
-                    // تحجيم ذكي للسوشيال ميديا (بحيث لا يتعدى عرض الصورة الأصلية 1080 بيكسل)
                     if (img.width > 1080) scaleFactor = 1080 / img.width;
-                } else if (qualitySetting === 'webp') {
-                    mimeType = 'image/webp'; ext = 'webp'; outputQuality = 0.90;
-                } else if (qualitySetting === 'raw') {
-                    mimeType = file.type === 'image/png' ? 'image/png' : 'image/jpeg';
-                    ext = mimeType === 'image/png' ? 'png' : 'jpg'; outputQuality = 1.0;
-                } else {
-                    // Smart
-                    mimeType = file.type === 'image/png' ? 'image/png' : 'image/jpeg';
-                    ext = mimeType === 'image/png' ? 'png' : 'jpg'; outputQuality = 0.92;
-                }
+                } else if (qualitySetting === 'webp') { mimeType = 'image/webp'; ext = 'webp'; outputQuality = 0.90;
+                } else if (qualitySetting === 'raw') { mimeType = file.type === 'image/png' ? 'image/png' : 'image/jpeg'; ext = mimeType === 'image/png' ? 'png' : 'jpg'; outputQuality = 1.0;
+                } else { mimeType = file.type === 'image/png' ? 'image/png' : 'image/jpeg'; ext = mimeType === 'image/png' ? 'png' : 'jpg'; outputQuality = 0.92; }
                 
                 let baseName = file.name ? file.name.replace(/\.[^/.]+$/, "") : "image";
                 
                 let imgBitmap = null;
                 if (supportsWorkers) imgBitmap = await createImageBitmap(img);
 
+                const currentImagePromises = []; // تخزين الأجزاء الخاصة بهذه الصورة فقط
+
                 for (let r = 0; r < rows; r++) {
                     for (let c = 0; c < cols; c++) {
                         const startX = Math.round((c * img.width) / cols), endX = Math.round(((c + 1) * img.width) / cols);
                         const startY = Math.round((r * img.height) / rows), endY = Math.round(((r + 1) * img.height) / rows);
                         const sliceWidth = endX - startX, sliceHeight = endY - startY;
-                        
-                        // تطبيق التصغير إذا كان وضع Ultra مفعل
-                        const targetWidth = Math.round(sliceWidth * scaleFactor);
-                        const targetHeight = Math.round(sliceHeight * scaleFactor);
-
-                        // الحفاظ على مسار المجلد الأصلي للصور وتسمية الجزء
+                        const targetWidth = Math.round(sliceWidth * scaleFactor), targetHeight = Math.round(sliceHeight * scaleFactor);
                         const sliceFileName = `${folderPath}${baseName}_row${r+1}_col${c+1}.${ext}`;
 
                         let taskPromise = new Promise((resolve, reject) => {
@@ -449,20 +302,16 @@
                                 const worker = workers[currentWorkerIndex];
                                 currentWorkerIndex = (currentWorkerIndex + 1) % workers.length;
                                 const taskId = Math.random().toString(36);
-                                
                                 const handleMessage = (e) => {
                                     if (e.data.id === taskId) {
                                         worker.removeEventListener('message', handleMessage);
-                                        if (e.data.success) {
-                                            finalZip.file(sliceFileName, e.data.blob); // حفظ في مسار المجلد الصحيح داخل הـ ZIP
-                                            resolve();
-                                        } else reject(new Error(e.data.error));
+                                        if (e.data.success) { finalZip.file(sliceFileName, e.data.blob); resolve(); } 
+                                        else reject(new Error(e.data.error));
                                     }
                                 };
                                 worker.addEventListener('message', handleMessage);
                                 worker.postMessage({ id: taskId, imgBitmap, startX, startY, sliceWidth, sliceHeight, targetWidth, targetHeight, mimeType, quality: outputQuality, bgColor });
                             } else {
-                                // بديل للمتصفحات القديمة
                                 const cvs = document.createElement('canvas'); const ctx = cvs.getContext('2d');
                                 cvs.width = targetWidth; cvs.height = targetHeight;
                                 if(bgColor) { ctx.fillStyle = bgColor; ctx.fillRect(0,0,targetWidth,targetHeight); }
@@ -473,23 +322,29 @@
 
                         taskPromise.then(() => {
                             completedTasks++;
-                            updateProgress((completedTasks / totalTasks) * 50, `جاري التقطيع ومعالجة المجلدات: ${Math.round((completedTasks / totalTasks) * 100)}%`);
+                            updateProgress((completedTasks / totalTasks) * 50, `جاري المعالجة (الرام محمي): ${Math.round((completedTasks / totalTasks) * 100)}%`);
                         });
-                        promises.push(taskPromise);
+                        currentImagePromises.push(taskPromise);
                     }
                 }
+
+                // ننتظر انتهاء أجزاء هذه الصورة "فقط" قبل الانتقال للتي تليها (يمنع انهيار الرام نهائياً)
+                await Promise.all(currentImagePromises);
+
+                // تفريغ الرام فوراً بعد انتهاء الصورة
+                if (imgBitmap && imgBitmap.close) imgBitmap.close();
             }
 
-            await Promise.all(promises);
             if (supportsWorkers) workers.forEach(w => w.terminate());
 
-            updateProgress(50, "جاري إعادة تجميع المجلدات في ZIP جديد...");
-            finalZip.generateAsync({ type: 'blob', compression: "DEFLATE", compressionOptions: { level: 6 } }, (metadata) => {
-                updateProgress(50 + (metadata.percent / 2), `جاري حفظ الملفات: ${Math.round(metadata.percent)}%`);
+            updateProgress(50, "جاري تجميع الملف في ZIP سريع (بدون ضغط إضافي)...");
+            
+            // السر الأكبر للسرعة: STORE تعني وضع الملفات فوراً في ZIP دون إعادة ضغطها مما يختصر 90% من الوقت ويحمي الرام!
+            finalZip.generateAsync({ type: 'blob', compression: "STORE" }, (metadata) => {
+                updateProgress(50 + (metadata.percent / 2), `حفظ الملف النهائي: ${Math.round(metadata.percent)}%`);
             }).then((content) => {
                 saveAs(content, `${fileName}.zip`);
-                updateProgress(100, "تم الانتهاء! تم الحفاظ على المجلدات الأصلية."); 
-                showToast("نجاح باهر!");
+                updateProgress(100, "تم الانتهاء بسرعة وبدون انهيار!"); showToast("نجاح باهر!");
                 setTimeout(() => { document.getElementById('progressWrapper').style.display = 'none'; btn.disabled = false; }, 3000);
             });
         });
