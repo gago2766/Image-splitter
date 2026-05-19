@@ -26,7 +26,6 @@
         .upload-icon { width: 80px; height: 80px; color: var(--primary); margin-bottom: 1rem; }
         .upload-text { font-size: 1.5rem; font-weight: 700; color: var(--text-main); text-align: center;}
         
-        /* ---------------- إصلاح الواجهة هنا ---------------- */
         .workspace { display: none; flex-direction: column; gap: 1.5rem; width: 100%; }
         
         .control-panel { 
@@ -56,7 +55,6 @@
         .btn-outline { background: transparent; color: var(--text-main); border: 2px solid var(--border-color); }
         
         .preview-area { width: 100%; min-height: 500px; background: var(--surface); border-radius: var(--radius-lg); box-shadow: var(--shadow); display: flex; flex-direction: column; position: relative; overflow: hidden; }
-        /* ------------------------------------------------ */
 
         .preview-header { padding: 1rem 1.5rem; border-bottom: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center; background: var(--surface); }
         .image-nav { display: flex; align-items: center; gap: 15px; background: var(--input-bg); padding: 5px 15px; border-radius: 20px; font-weight: 600; border: 1px solid var(--border-color); }
@@ -100,7 +98,6 @@
 
         <div id="workspace" class="workspace">
             
-            <!-- لوحة التحكم في الأعلى -->
             <div class="control-panel">
                 <div class="control-group">
                     <label>طريقة التقسيم</label>
@@ -122,13 +119,19 @@
                 </div>
 
                 <div class="control-group">
-                    <label class="highlight-label">الجودة (خفيف جداً 🚀)</label>
+                    <label class="highlight-label">القوالب الجاهزة</label>
                     <select id="exportQuality" class="input-field">
-                        <option value="ultra">تحسين فائق (2-3 ميجا - جودة ممتازة)</option>
                         <option value="smart">ضغط ذكي (متوسط)</option>
+                        <option value="ultra">تحسين فائق (2-3 ميجا - جودة ممتازة)</option>
                         <option value="webp">WebP (أصغر حجم)</option>
                         <option value="raw">خام 100% (حجم ضخم)</option>
                     </select>
+                </div>
+
+                <!-- الشريط الجديد الذي تم إضافته -->
+                <div class="control-group">
+                    <label>نسبة الجودة للصور: <span id="qualityValue" style="color: var(--secondary);">92</span>%</label>
+                    <input type="range" id="qualitySlider" min="1" max="100" value="92" class="input-field" style="padding: 0; border: none; box-shadow: none; background: transparent; cursor: pointer;">
                 </div>
 
                 <div class="control-group">
@@ -157,7 +160,6 @@
                 </div>
             </div>
 
-            <!-- مساحة الصورة في الأسفل -->
             <div class="preview-area">
                 <div class="preview-header">
                     <div style="display:flex; flex-direction:column;">
@@ -194,6 +196,20 @@
         const previewImage = document.getElementById('previewImage'), gridOverlay = document.getElementById('gridOverlay');
         const imageNav = document.getElementById('imageNav'), imgCounterText = document.getElementById('imgCounterText'), folderInfo = document.getElementById('folderInfo');
         
+        // إعدادات الشريط الجديد
+        const qualitySlider = document.getElementById('qualitySlider'), qualityValue = document.getElementById('qualityValue');
+        qualitySlider.addEventListener('input', (e) => { qualityValue.innerText = e.target.value; });
+        
+        // تحريك الشريط تلقائياً عند تغيير القالب
+        exportQuality.addEventListener('change', (e) => {
+            let val = 92;
+            if (e.target.value === 'ultra') val = 85;
+            else if (e.target.value === 'webp') val = 90;
+            else if (e.target.value === 'raw') val = 100;
+            qualitySlider.value = val;
+            qualityValue.innerText = val;
+        });
+        
         let currentImages =[], currentViewIndex = 0;
 
         uploadSection.addEventListener('click', () => fileInput.click());
@@ -212,7 +228,6 @@
             for (let file of files) {
                 if (file.name.toLowerCase().endsWith('.zip')) {
                     try {
-                        // استخدام fflate لفك الضغط بشكل خارق
                         const arrayBuffer = await file.arrayBuffer();
                         const unzipped = fflate.unzipSync(new Uint8Array(arrayBuffer));
                         
@@ -345,19 +360,24 @@
                 workerPool = new WorkerPool(numWorkers);
             }
 
-            // مصفوفة لتجميع الملفات الجاهزة في الـ Uint8Array لضغطها في fflate
             const zipFiles = {}; 
 
             for (let imgIndex = 0; imgIndex < currentImages.length; imgIndex++) {
                 const { img, file, folderPath } = currentImages[imgIndex];
-                let mimeType = 'image/jpeg', ext = 'jpg', outputQuality = 0.92, scaleFactor = 1.0;
+                
+                // استخدام قيمة شريط الجودة الذي أضفناه
+                let mimeType = 'image/jpeg', ext = 'jpg', outputQuality = parseInt(qualitySlider.value) / 100, scaleFactor = 1.0;
 
                 if (qualitySetting === 'ultra') {
-                    mimeType = 'image/webp'; ext = 'webp'; outputQuality = 0.85;
+                    mimeType = 'image/webp'; ext = 'webp';
                     if (img.width > 1080) scaleFactor = 1080 / img.width;
-                } else if (qualitySetting === 'webp') { mimeType = 'image/webp'; ext = 'webp'; outputQuality = 0.90;
-                } else if (qualitySetting === 'raw') { mimeType = file.type === 'image/png' ? 'image/png' : 'image/jpeg'; ext = mimeType === 'image/png' ? 'png' : 'jpg'; outputQuality = 1.0;
-                } else { mimeType = file.type === 'image/png' ? 'image/png' : 'image/jpeg'; ext = mimeType === 'image/png' ? 'png' : 'jpg'; outputQuality = 0.92; }
+                } else if (qualitySetting === 'webp') { 
+                    mimeType = 'image/webp'; ext = 'webp'; 
+                } else if (qualitySetting === 'raw') { 
+                    mimeType = file.type === 'image/png' ? 'image/png' : 'image/jpeg'; ext = mimeType === 'image/png' ? 'png' : 'jpg'; 
+                } else { 
+                    mimeType = file.type === 'image/png' ? 'image/png' : 'image/jpeg'; ext = mimeType === 'image/png' ? 'png' : 'jpg'; 
+                }
                 
                 let baseName = file.name ? file.name.replace(/\.[^/.]+$/, "") : "image";
                 let imgBitmap = null;
@@ -377,7 +397,7 @@
                         if (supportsWorkers) {
                             taskPromise = workerPool.run({ imgBitmap, startX, startY, sliceWidth, sliceHeight, targetWidth, targetHeight, mimeType, quality: outputQuality, bgColor })
                                 .then(buffer => {
-                                    zipFiles[sliceFileName] = new Uint8Array(buffer); // جاهز فوراً للـ fflate
+                                    zipFiles[sliceFileName] = new Uint8Array(buffer); 
                                 });
                         } else {
                             taskPromise = new Promise((resolve) => {
@@ -402,16 +422,15 @@
                 }
 
                 await Promise.all(currentImagePromises);
-                if (imgBitmap && imgBitmap.close) imgBitmap.close(); // تحرير الرام فوراً لكل صورة تنتهي
+                if (imgBitmap && imgBitmap.close) imgBitmap.close(); 
             }
 
             if (workerPool) workerPool.terminate();
 
             updateProgress(95, "تجميع الـ ZIP بسرعه البرق ⚡ ...");
             
-            // 🚀 استخدام fflate الصاروخية لتكوين الـ ZIP في مللي ثانية باستخدام الـ (Uint8Array)
             setTimeout(() => {
-                const zipped = fflate.zipSync(zipFiles, { level: 0 }); // 0 (STORE) = أقصى سرعة ممكنة
+                const zipped = fflate.zipSync(zipFiles, { level: 0 }); 
                 const zipBlob = new Blob([zipped], { type: 'application/zip' });
                 
                 saveAs(zipBlob, `${fileName}.zip`);
